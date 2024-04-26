@@ -1,0 +1,56 @@
+{
+    "Page": {
+        "NewContractPage": "Bank-One-Checklist-Form.aspx",
+        "ContractMgtPage": "Contract-Mgt.aspx",
+        "SignedContractPage": "Signed-Contract-Mgt.aspx",
+        "HomePage": "home.aspx",
+        "ContractDraft": "Contract-Draft.aspx",
+        "InProcessContracts": "In-Process-Draft.aspx",
+        "ExpiringContracts": "Expiring-Contracts.aspx",
+        "MasterPage": "Master-Page.aspx",
+        "AddShareholderPage": "Add-Shareholder.aspx",
+        "CompanySecretaryDashboard": "Company-Secretary-Dashboard.aspx",
+        "CompanyDashboard": "Company-Dashboard.aspx",
+        "AddCompanyPage": "Add-Company.aspx",
+        "RepositoryPage": "Repository.aspx",
+        "EmployeeContractsPage": "Employee-Contracts.aspx",
+        "NewEmployeeContractPage": "New-Employee-Contract.aspx",
+        "AddLitigationPage": "Add-Litigation.aspx",
+        "LitigationDashboard": "Litigation-Dashboard.aspx",
+        "NewDocumentPage": "New-Document.aspx",
+        "DocDashboardPage": "Document-Dashboard.aspx",
+        "UploadCheckList": "Bank-One-Checklist-Form.aspx",
+        "ListOfAgreements": "List-of-Agreements.aspx",
+        "AuditTrail": "Contract-Audit-Trail.aspx",
+        "existing_signed_contract": "Contracts.aspx"
+    },
+    "DocumentLibrary": {
+        "ContractDraft": "ContractDraft",
+        "ContractMgt": "ContractMgt",
+        "EmployeeContracts": "EmployeeContracts",
+        "AgreementCheckList": "Contracts",
+        "ApprovalMinutes": "ApprovalMinutes",
+        "SignedDoc": "Signed Contracts",
+        "ExistingDoc": "Existing Contracts"
+    },
+    "List": {
+        "Companies": "Comapanies",
+        "Contract_Request": "Contract_Request",
+        "Country": "Country",
+        "ENL_Services": "Company",
+        "TypeOfContracts": "Type of contracts"
+    },
+    "Link": {
+        "RepositoryLink": "/Existing%20Contracts/Forms/AllItems.aspx"
+    },
+    "Groups": {
+
+        "AdminGroup": "Administration",
+        "ManageActionsGroup": "Manage Actions",
+        "AdminMain": "GR_ADMIN_MAIN",
+        "AdminSub": "GR_ADMIN_SUB",
+        "Despacher": "ENL_CMS_Despachers",
+        "Requestor": "ENL_CMS_Requestors",
+        "Owner": "ENL_CMS_Owners" 
+    }
+}

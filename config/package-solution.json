@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "enl-contract-management-client-side-solution",
+    "id": "0543369e-4cc0-4229-b979-09cfd40e2b52",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.14.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "enl-contract-management description"
+      },
+      "longDescription": {
+        "default": "enl-contract-management description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "enl-contract-management Feature",
+        "description": "The feature that activates elements of the enl-contract-management solution.",
+        "id": "45d91167-951a-4eba-8416-e4d758d225ad",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/enl-contract-management.sppkg"
+  }
+}

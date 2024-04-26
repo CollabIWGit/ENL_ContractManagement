@@ -1,0 +1,16 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": false,
+    "version": "1.14.0",
+    "libraryName": "enl-contract-management",
+    "libraryId": "0543369e-4cc0-4229-b979-09cfd40e2b52",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "enl-contract-management",
+    "solutionShortDescription": "enl-contract-management description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

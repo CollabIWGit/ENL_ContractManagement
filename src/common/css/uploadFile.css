@@ -1,0 +1,124 @@
+/* .input-file-container {
+  position: relative;
+  width: 225px;
+}
+
+.input-file-trigger {
+  display: block;
+  padding: 14px 45px;
+  background: #39D2B4;
+  color: #fff;
+  font-size: 1em;
+  transition: all .4s;
+  cursor: pointer;
+}
+
+.input-file {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 225px;
+  opacity: 0;
+  padding: 14px 0;
+  cursor: pointer;
+}
+
+.input-file:hover+.input-file-trigger,
+.input-file:focus+.input-file-trigger,
+.input-file-trigger:hover,
+.input-file-trigger:focus {
+  background: #34495E;
+  color: #39D2B4;
+}
+
+.file-return {
+  margin: 0;
+}
+
+.file-return:not(:empty) {
+  margin: 1em 0;
+}
+
+.file-return {
+  font-style: italic;
+  font-size: .9em;
+  font-weight: bold;
+}
+
+.file-return:not(:empty):before {
+  content: "Selected file: ";
+  font-style: normal;
+  font-weight: normal;
+} */
+
+/* Useless styles, just for demo styles */
+
+.form {
+  width: 225px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.txtcenter {
+  margin-top: 4em;
+  font-size: .9em;
+  text-align: center;
+  color: #aaa;
+}
+
+.copy {
+  margin-top: 2em;
+}
+
+.copy a {
+  text-decoration: none;
+  color: #1ABC9C;
+}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #212121;
+}
+
+/* #tab_section_contract {
+  margin-left: 13%;
+  border-left: 2px;
+  border-left-style: groove;
+} */
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: none;
+  outline: none;
+  cursor: pointer;
+  transition: .3s;
+  font-size: 17px;
+  color: #dc143c;
+  border-right: 2px;
+  border-right-style: ridge;
+  margin: 0;
+  padding-left: 0;
+  font-family: cursive;
+  font-weight: 500;
+}
+
+/* Change background color of buttons on hover */
+.nav button:hover {
+  background-color: #691b22;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+/* .tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} */

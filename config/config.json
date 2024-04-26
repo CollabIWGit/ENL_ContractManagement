@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "enl-cms-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/enlCms/EnlCmsWebPart.js",
+          "manifest": "./src/webparts/enlCms/EnlCmsWebPart.manifest.json"
+        }
+      ]
+    },
+    "request-form-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/requestForm/RequestFormWebPart.js",
+          "manifest": "./src/webparts/requestForm/RequestFormWebPart.manifest.json"
+        }
+      ]
+    },
+    "contract-form-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/contractForm/ContractFormWebPart.js",
+          "manifest": "./src/webparts/contractForm/ContractFormWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "EnlCmsWebPartStrings": "lib/webparts/enlCms/loc/{locale}.js",
+    "RequestFormWebPartStrings": "lib/webparts/requestForm/loc/{locale}.js",
+    "ContractFormWebPartStrings": "lib/webparts/contractForm/loc/{locale}.js"
+  }
+}
