@@ -32,6 +32,7 @@ import {
 
 
 import { sideMenuUtils } from "../../common/utils/sideMenuUtils";
+import { Navigation } from 'spfx-navigation';
 let SideMenuUtils = new sideMenuUtils();
 
 SPComponentLoader.loadCss('https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css');
@@ -146,6 +147,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       department = "Owner";
       console.log("You are an Owner");
       $(".legalDept").css("display", "none");
+      $('#commentSection').hide();
 
     }
 
@@ -166,6 +168,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('requestid');
+
+    if (!requestId) {
+        $('#commentSection').hide();
+    }
   }
 
   addNewRow(table: any, party) {
@@ -237,7 +245,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                 <div class="${styles['col-1-2']}">
                                     <div class="${styles.controls}">
                                         <i class="fa fa-sort"></i>
-                                        <input type="text" class="floatLabel2" value="Please select.." id="enl_company" list='companies_folder' />
+                                        <input type="text" class="floatLabel2" placeholder="Please select.." id="enl_company" list='companies_folder' />
     
                                         <datalist id="companies_folder">
     
@@ -266,7 +274,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                 <div class="${styles['col-1-2']}">
                                     <div class="${styles.controls}">
                                         <i class="fa fa-sort"></i>
-                                        <input type="text" class="floatLabel2" id="requestFor" list='request_List' value="Please select.."/>
+                                        <input type="text" class="floatLabel2" id="requestFor" list='request_List' placeholder="Please select.."/>
     
                                         <datalist id="request_List">
     
@@ -368,7 +376,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                     <div class="${styles.controls}">
                                     <i class="fa fa-sort"></i>
 
-                                        <input type="text" class="floatLabel2" value="Please select.." id="authority_to_approve_contract" list='authorityApproval'>
+                                        <input type="text" class="floatLabel2" placeholder="Please select.." id="authority_to_approve_contract" list='authorityApproval'>
                                         <datalist id="authorityApproval">
 
                                         <option value="Yes">
@@ -401,41 +409,92 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                             </div>
     
                             </br>
-    
-                            <div class="legalDept">
 
-  
-                                <h5 class="${styles.heading}">Comments</h3>
-                                    <div class="${styles.grid}">
-                                        <div id="contentTable">
-                                            <div class="w3-container" id="table">
-                                                <div id="content3">
-                                                    <div id="tblcommentsD" class="table-responsive-xl">
-                                                        <div class="form-row">
-                                                            <div class="col-xl-12">
-                                                                <div id="sp_comments_list_SectD">
+                            <div id="commentSection">
+
+                            <h5 class="${styles.heading}">Comments</h5>
     
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                    <div class="${styles.grid}">
+                                        <div class="${styles['col-1-1']}">
+                                            <div class="${styles.controls}">
+    
+                                                <textarea type="text" class="floatLabel" id="comment"></textarea>
+    
+    
+                                                <label for="comment">Comments</label>
+    
                                             </div>
                                         </div>
+    
+    
+    
+    
                                     </div>
-    
-    
-    
-    
-                                    <h5 class="${styles.heading}">For Legal Department Only</h5>
-    
-    
     
                                     <div class="${styles.grid}">
                                         <div class="${styles['col-1-2']}">
                                             <div class="${styles.controls}">
+    
+                                                <input type="text" class="floatLabel" id="commentsBy" />
+    
+    
+                                                <label for="commentsBy">Comments by:</label>
+    
+                                            </div>
+                                        </div>
+                                        <div class="${styles['col-1-2']}">
+                                            <div class="${styles.controls}">
+                                                <input type="date" class="floatLabel" id="comment_date">
+                                                <label for="comment_date">Date</label>
+    
+                                            </div>
+    
+                                        </div>
+                                    </div>
+    
+                                    </br>
+    
+                                    <div class="form-row">
+    
+                                        <button type="button" class="buttoncss" id="addComment">Add Comment</button>
+                                        <button type="button" class="buttoncss">Cancel</button>
+    
+    
+                                    </div>
+
+                                    <br>
+                                    
+                              <h5 class="${styles.heading}">Comments</h3>
+                              <div class="${styles.grid}">
+                                  <div id="contentTable">
+                                      <div class="w3-container" id="table">
+                                          <div id="content3">
+                                              <div id="tblcommentsD" class="table-responsive-xl">
+                                                  <div class="form-row">
+                                                      <div class="col-xl-12">
+                                                          <div id="sp_comments_list_SectD">
+
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+
+                            </div>
+    
+                            <div class="legalDept">
+                                    <h5 class="${styles.heading}">For Legal Department Only</h5>
+    
+    
+                                
+                                    <div class="${styles.grid}">
+                                        <div class="${styles['col-1-2']}">
+                                            <div class="${styles.controls}">
                                                 <i class="fa fa-sort"></i>
-                                                <input type="text" class="floatLabel2" value="Please select.." id="assignedTo" list='ownersList' />
+                                                <input type="text" class="floatLabel2" placeholder="Please select.." id="assignedTo" list='ownersList' />
     
                                                 <datalist id="ownersList">
     
@@ -465,7 +524,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                             <div class="${styles.controls}">
                                                 <i class="fa fa-sort"></i>
                                                 <input type="text" class="floatLabel2" id="contract_type"
-                                                    list='typesOfContracts_list' value="Please select.." />
+                                                    list='typesOfContracts_list' placeholder="Please select.." />
     
                                                 <datalist id="typesOfContracts_list">
     
@@ -515,58 +574,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                     </div>
     
                                     </br>
-    
-    
-                                    <h5 class="${styles.heading}">Comments</h5>
-    
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-1']}">
-                                            <div class="${styles.controls}">
-    
-                                                <textarea type="text" class="floatLabel" id="comment"></textarea>
-    
-    
-                                                <label for="comment">Comments</label>
-    
-                                            </div>
-                                        </div>
-    
-    
-    
-    
-                                    </div>
-    
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-    
-                                                <input type="text" class="floatLabel" id="commentsBy" />
-    
-    
-                                                <label for="commentsBy">Comments by:</label>
-    
-                                            </div>
-                                        </div>
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <input type="date" class="floatLabel" id="comment_date">
-                                                <label for="comment_date">Date</label>
-    
-                                            </div>
-    
-                                        </div>
-                                    </div>
-    
-                                    </br>
-    
-                                    <div class="form-row">
-    
-                                        <button type="button" class="buttoncss" id="addComment">Add Comment</button>
-                                        <button type="button" class="buttoncss">Cancel</button>
-    
-    
-                                    </div>
-    
+        
                             </div>
     
                         </div>
@@ -734,6 +742,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       icon_add.classList.add('hide');
 
       (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
+
+      Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Requestor-Dashboard.aspx`, true);
 
     });
 

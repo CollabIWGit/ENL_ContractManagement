@@ -490,6 +490,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div id="section_review_contract">
+                                            <div id="tbl_contract" style="margin-top: 1.5em;">
+                                            </div>
+          
+                                      </div>
         
                         
                             </div>
@@ -546,7 +552,95 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         });
 
         this.renderComments(requestID);
+        this.renderRequestDetails(parseInt(requestID));
 
+    }
+
+    private renderRequestDetails(id: any) {
+
+
+        this.getFileDetailsByFilter('Contracts_ToReview', id)
+            .then((fileDetails) => {
+                if (fileDetails) {
+                    console.log("File URL:", fileDetails.fileUrl);
+                    console.log("File Name:", fileDetails.fileName);
+
+                    let html: string = '<div class="form-row">';
+                    html += `
+                              
+                              <div class="col-md-12 table-responsive">
+                            <table class="table" id="table1" style="box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);margin-bottom: 2em;">
+                              <thead class="thead-dark">
+                                <tr>
+                                  <th class="th-lg" scope="col">Contract</th>
+                                  <th scope="col">View</th>
+                                </tr>
+                              </thead>
+                            `;
+
+                    html += `
+                            <tbody>
+                            <tr>
+                              <td scope="row">${fileDetails.fileName}</td>
+                              <td>
+                                <ul class="list-inline m-0">
+                                  <li class="list-inline-item">
+                                    <button id="btn_view" class="btn btn-secondary btn-sm rounded-circle" type="button"  data-toggle="tooltip" data-placement="top" title="View" style="display: none;"><i class="fas fa-eye"></i></button>
+                                  </li>
+                                  <li class="list-inline-item">
+                                  <button id="modalActivate" class="btn btn-secondary btn-sm rounded-circle" type="button"  data-toggle="modal" data-target="#exampleModalPreview" style="display: block;width: auto;""><i class="fas fa-eye"></i></button>
+                                </li>
+                                </ul>
+                              </td>
+                            </tr>
+                          </tbody>
+                          </table>
+                    </div>
+                    </div>
+                              `;
+
+                    var baseUrl = '';
+                    const listContainer: Element = this.domElement.querySelector('#tbl_contract');
+                    listContainer.innerHTML = html;
+
+                    $("#modalActivate").click(() => {
+                        //console.log("calling viewing ...");
+                        // this.submit_main();
+                        window.open(`https://frcidevtest.sharepoint.com/${fileDetails.fileUrl}`, '_blank');
+                        // Navigation.navigate(`${urlChoice}`, '_blank');
+                    });
+
+
+                } else {
+                    console.log("Item not found.");
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+
+    }
+
+    async getFileDetailsByFilter(libraryName, reqId) {
+        try {
+            const items = await sp.web.lists.getByTitle(libraryName).items
+                .filter(`Request_Id eq '${reqId}'`)
+                .select("File", "File/ServerRelativeUrl", "File/Name")
+                .expand("File")
+                .get();
+
+            if (items.length > 0) {
+                const item = items[0];
+                const fileUrl = item.File.ServerRelativeUrl;
+                const fileName = item.File.Name;
+                return { fileUrl, fileName };
+            }
+
+            return null;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
     }
 
     private getItemId() {
@@ -602,14 +696,14 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                             <tbody id="tb_contract_mgt_SectD">
                         `;
 
-                console.log('Test 1');
-                commentItemsList.forEach((result: any) => {
-                    console.log('Test 2');
-                    const item = {
-                        Comment: result.Comment,
-                        CommentBy: result.CommentBy,
-                        CommentDate: result.CommentDate,
-                    };
+            console.log('Test 1');
+            commentItemsList.forEach((result: any) => {
+                console.log('Test 2');
+                const item = {
+                    Comment: result.Comment,
+                    CommentBy: result.CommentBy,
+                    CommentDate: result.CommentDate,
+                };
 
                 let date = '';
                 if (!Date.parse(item.CommentDate)) {
