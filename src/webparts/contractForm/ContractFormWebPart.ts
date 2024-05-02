@@ -372,7 +372,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         
         
                                     <div class="${styles['col-1-3']}">
-                                        <div class="${styles.controls}">sp_comments_list_SectD
+                                        <div class="${styles.controls}">
                                             <input type="date" class="floatLabel" id="originalCopyFiled">
                                             <label for="originalCopyFiled">Original Copy Filed</label>
         

@@ -147,7 +147,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       department = "Owner";
       console.log("You are an Owner");
       $(".legalDept").css("display", "none");
-      $('#commentSection').hide();
+     // $('#commentSection').hide();
 
     }
 
@@ -172,7 +172,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     const requestId = urlParams.get('requestid');
 
     if (!requestId) {
-        $('#commentSection').hide();
+     //   $('#commentSection').hide();
     }
   }
 
@@ -192,26 +192,25 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     <div class="wrapper d-flex align-items-stretch">
         <div id="nav-placeholder"></div>
     
-        <div class="p-4 p-md-5 pt-3" id="content">   
-
+        <div class="p-4 p-md-5 pt-3" id="content">
+    
             <div class="${styles.requestForm}" id="form_checklist">
     
-  
+    
                 <form id="requestor_form" style="    border: 1px solid #ccc;
-        padding: 20px;
-        box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
-        margin: 2em;
-        padding: 2em;
-        border-radius: 1rem;">
+            padding: 20px;
+            box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
+            margin: 2em;
+            padding: 2em;
+            border-radius: 1rem;">
     
                     <div class="${styles['form-group']}">
     
                         <h2>Request Form</h2>
-                        <h5 class="${styles.heading}">Request Details</h5>
-    
+                        <h5 class="${styles.heading}">Your details</h5>
                         <div class="${styles.grid}">
     
-                            <div class="${styles['col-1-3']}">
+                            <div class="${styles['col-1-2']}">
                                 <div class="${styles.controls}">
                                     <input type="text" id="requestor_name" class="floatLabel">
                                     <label for="requestor_name">Name of Requestor</label>
@@ -220,7 +219,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     
     
     
-                            <div class="${styles['col-1-3']}">
+                            <div class="${styles['col-1-2']}">
                                 <div class="${styles.controls}">
     
                                     <input type="text" class="floatLabel" id="status_title">
@@ -228,7 +227,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                 </div>
                             </div>
     
-                            <div class="${styles['col-1-3']}">
+                        </div>
+    
+                        <div class="${styles.grid}">
+    
+    
+                            <div class="${styles['col-1-2']}">
                                 <div class="${styles.controls}">
     
                                     <input type="text" class="floatLabel" id="email">
@@ -237,132 +241,196 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     
                             </div>
     
-                            </br>
     
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}">
     
-    
-                            <div class="${styles.grid}">
-                                <div class="${styles['col-1-2']}">
-                                    <div class="${styles.controls}">
-                                        <i class="fa fa-sort"></i>
-                                        <input type="text" class="floatLabel2" placeholder="Please select.." id="enl_company" list='companies_folder' />
-    
-                                        <datalist id="companies_folder">
-    
-                                        </datalist>
-                                        <label for="enl_company">Company*</label>
-    
-                                    </div>
+                                    <input type="text" class="floatLabel" id="email">
+                                    <label for="email">Phone Number*</label>
                                 </div>
-    
-    
-                                <div class="${styles['col-1-2']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="department">
-                                        <label for="department">Department</label>
-                                    </div>
-                                </div>
-    
     
                             </div>
     
-                            </br>
+                        </div>
+           
     
-                            <div class="${styles.grid}">
+                        <div class="${styles.grid}">
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}">
+                                    <i class="fa fa-sort"></i>
+                                    <input type="text" class="floatLabel2" placeholder="Please select.." id="enl_company"
+                                        list='companies_folder' />
     
+                                    <datalist id="companies_folder">
     
-                                <div class="${styles['col-1-2']}">
-                                    <div class="${styles.controls}">
-                                        <i class="fa fa-sort"></i>
-                                        <input type="text" class="floatLabel2" id="requestFor" list='request_List' placeholder="Please select.."/>
+                                    </datalist>
+                                    <label for="enl_company">Company*</label>
     
-                                        <datalist id="request_List">
-    
-    
-    
-                                        </datalist>
-                                        <label for="requestFor">Request For*</label>
-    
-                                    </div>
-                                </div>
-    
-                                <div class="${styles['col-1-2']}">
-                                    <div class="${styles.controls}" id="uploadFile">
-                                        <input type="file" class="floatLabel" id="uploadContract">
-                                        <label for="uploadContract">Upload Contract to Review</label>
-                                    </div>
                                 </div>
                             </div>
     
-                            </br>
+    
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}">
+                                    <input type="text" class="floatLabel" id="department">
+                                    <label for="department">Department</label>
+                                </div>
+                            </div>
+    
+    
+                        </div>
+    
+                    </br>
+    
+                        <h5 class="${styles.heading}">How can we assist?</h5>
+    
+                        <div class="${styles.grid}">
+    
+    
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}">
+                                    <i class="fa fa-sort"></i>
+                                    <input type="text" class="floatLabel2" id="requestFor" list='request_List'
+                                        placeholder="Please select.." />
+    
+                                    <datalist id="request_List">
+    
+    
+    
+                                    </datalist>
+                                    <label for="requestFor">Request For*</label>
+    
+                                </div>
+                            </div>
+    
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}" id="uploadFile">
+                                    <input type="file" class="floatLabel" id="uploadContract">
+                                    <label for="uploadContract">Upload Contract to Review</label>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="${styles.grid}">
+                            <div class="${styles['col-1-2']}">
+                                <div class="form-check"
+                                    style="font-size: large;border: none;height: 51px;">
+                                    <input type="checkbox" class="" id="checkbox_confidential"
+                                        name="checkbox_confidential"
+                                        style="transform: scale(1.9);margin-top: 18px;margin-left: -9px;margin-right: 12px;accent-color: #f07e12;"
+                                        value="YES">
+                                    <label for="checkbox" class="form-check-label"
+                                        style="font-family: Poppins,Arial,sans-serif;"> Confidential</label>
+    
+                                        <p style="font-size: smaller;margin-left: -15px;">[click if you wish this assignment to be known to Chief Legal Executive only]</p>
+    
+    
+    
+                                </div>
+                            </div>
+                            <div class="${styles['col-1-2']}">
+    
+    
+                            </div>
+                        </div>
+    
+                    </br>
+                </br>
+    
+                    <div class="${styles.grid}">
+                        <div class="${styles['col-1-1']}">
+                            <div class="${styles.controls}">
+    
+                                <textarea type="text" class="floatLabel" id="brief_desc"></textarea>
+    
+    
+                                <label for="brief_desc">Tell us more: brief description of the transaction, what do you want to achieve?</label>
+    
+                            </div>
+                        </div>
+    
+    
+                    </div>
+    
+    
+                    </br>
+                    <h5 class="${styles.heading}">Parties to the agreement</h5>
+                    
+    
+    
+                        <div class="${styles.grid}">
+    
+    
+                            <div class="${styles['col-1-3']}">
+                                <div class="${styles.controls}">
+                                    <input type="text" class="floatLabel" id="party1">
+                                    <label for="party1">Name of Party 1(ENL-Rogers group side)</label>
+    
+                                </div>
+                            </div>
+                            </div>
+    
     
                             <div class="${styles.grid}">
-    
-    
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party1">
-                                        <label for="party1">Party 1 to the Agreement*</label>
-    
-                                    </div>
-                                </div>
-    
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
                                         <input type="text" class="floatLabel" id="party2">
-                                        <label for="party2">Party 2 to the Agreement*</label>
+                                        <label for="party2">Name of Party 2</label>
+        
+                                    </div>
+                                </div>
+                            </div>
     
+                            <div class="${styles.grid}">
+                                <div class="${styles['col-1-3']}">
+                                    <div class="${styles.controls}">
+                                        <div style="position: relative;">
+                                            <input type="text" class="floatLabel" id="other_parties">
+                                            <label for="other_parties" class="">Other Parties*</label>
+                                            <button class="add-button" id="addOtherParties"
+                                                style="position: absolute;right: 12%;left: 73%;top: 38%;transform: translateY(-50%);width: 20%;">+</button>
+                                        </div>
                                     </div>
                                 </div>
     
-                                <div class="${styles['col-1-3']}">
-                                <div class="${styles.controls}">
-                                <div style="position: relative;">
-                                    <input type="text" class="floatLabel" id="other_parties">
-                                    <label for="other_parties" class="">Other Parties*</label>
-                                    <button class="add-button" id="addOtherParties" style="position: absolute;right: 12%;left: 73%;top: 38%;transform: translateY(-50%);width: 20%;">+</button>
-                                </div>
                             </div>
-                                </div>
-                            </div>
-    </br>
-                                    <h5 class="${styles.heading}">Other Parties</h3>
-                                    <div class="${styles.grid}">
-                                        <div id="contentTable">
-                                            <div class="w3-container" id="table">
-                                                <div id="content3">
-                                                    <div id="tblOtherParties" class="table-responsive-xl">
-                                                        <div class="form-row">
-                                                            <div class="col-xl-12">
-                                                                <div id="other_parties_tbl">
-                                                                <table id='tbl_other_Parties' class='table table-striped'">
-                                                                <thead>
-                                                                <tr>
-                                                                    <th class="text-left">Other Party</th>              
+    
+    
+                        </br>
+                        <h5 class="${styles.heading}">Other Parties</h3>
+                            <div class="${styles.grid}">
+                                <div id="contentTable">
+                                    <div class="w3-container" id="table">
+                                        <div id="content3">
+                                            <div id="tblOtherParties" class="table-responsive-xl">
+                                                <div class="form-row">
+                                                    <div class="col-xl-12">
+                                                        <div id="other_parties_tbl">
+                                                            <table id='tbl_other_Parties' class='table table-striped'>
+                                                                    <thead>
+                                                                    <tr>
+                                                                        <th class=" text-left">Other Party</th>
                                                                 </tr>
                                                                 </thead>
                                                                 <tbody id="tb_otherParties">
-                                                               </tbody>
-                                                                </table>
+                                                                </tbody>
+                                                            </table>
     
-                                                                </div>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
                             </br>
     
-                            <div class="${styles.grid}">
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="textarea" class="floatLabel" id="brief_desc">
-                                        <label for="brief_desc">Brief Description of Transaction*</label>
+                            <h5 class="${styles.heading}">Other info</h5>
     
-                                    </div>
-                                </div>
+    
+                            <div class="${styles.grid}">
+    
     
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
@@ -372,25 +440,43 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                     </div>
                                 </div>
     
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
+                            </div>
+    
+                            </br>
+    
+                            <div class="${styles.grid}">
+                            <div class="${styles['col-1-2']}">
+                                <div class="${styles.controls}">
                                     <i class="fa fa-sort"></i>
-
-                                        <input type="text" class="floatLabel2" placeholder="Please select.." id="authority_to_approve_contract" list='authorityApproval'>
-                                        <datalist id="authorityApproval">
-
+    
+                                    <input type="text" class="floatLabel2" placeholder="Please select.."
+                                        id="authority_to_approve_contract" list='authorityApproval'>
+                                    <datalist id="authorityApproval">
+    
                                         <option value="Yes">
                                         <option value="No">
     
     
-                                        </datalist>
-                                        <label for="authority_to_approve_contract">Authority to Approve Contract*</label>
+                                    </datalist>
+                                    <label for="authority_to_approve_contract">Authority to Approve Contract*</label>
     
+                                </div>
+                            </div>
+    
+                            <div class="${styles.grid}">
+                                <div class="${styles['col-1-2']}">
+                                    <div class="${styles.controls}" id="authorisedApproverDiv" >
+                                        <input type="text" class="floatLabel" id="authorisedApprover">
+                                        <label for="party2">Name of authorised approver</label>
+        
                                     </div>
                                 </div>
                             </div>
     
-                            </br>
+    
+                            </div>
+    
+    
                             <div class="form-row">
     
                                 <button type="button" class="buttoncss" id="saveToList"><i class="fa fa-refresh icon"></i>
@@ -399,190 +485,176 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     
     
                             </div>
-
+    
                             </br>
-
+    
                             <div id="section_review_contract" style="display:none">
-                              <div id="tbl_contract" style="margin-top: 1.5em;">
-                              </div>
-
+                                <div id="tbl_contract" style="margin-top: 1.5em;">
+                                </div>
+    
                             </div>
     
                             </br>
-
+    
                             <div id="commentSection">
-
-                            <h5 class="${styles.heading}">Comments</h5>
     
+                                <h5 class="${styles.heading}">Comments</h5>
+    
+                                <div class="${styles.grid}">
+                                    <div class="${styles['col-1-1']}">
+                                        <div class="${styles.controls}">
+    
+                                            <textarea type="text" class="floatLabel" id="comment"></textarea>
+    
+    
+                                            <label for="comment">Comments</label>
+    
+                                        </div>
+                                    </div>
+    
+    
+    
+    
+                                </div>
+    
+                                <div class="${styles.grid}">
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+    
+                                            <input type="text" class="floatLabel" id="commentsBy" />
+    
+    
+                                            <label for="commentsBy">Comments by:</label>
+    
+                                        </div>
+                                    </div>
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <input type="date" class="floatLabel" id="comment_date">
+                                            <label for="comment_date">Date</label>
+    
+                                        </div>
+    
+                                    </div>
+                                </div>
+    
+                                </br>
+    
+                                <div class="form-row">
+    
+                                    <button type="button" class="buttoncss" id="addComment">Add Comment</button>
+                                    <button type="button" class="buttoncss">Cancel</button>
+    
+    
+                                </div>
+    
+                                <br>
+    
+                                <h5 class="${styles.heading}">Comments</h3>
                                     <div class="${styles.grid}">
-                                        <div class="${styles['col-1-1']}">
-                                            <div class="${styles.controls}">
+                                        <div id="contentTable">
+                                            <div class="w3-container" id="table">
+                                                <div id="content3">
+                                                    <div id="tblcommentsD" class="table-responsive-xl">
+                                                        <div class="form-row">
+                                                            <div class="col-xl-12">
+                                                                <div id="sp_comments_list_SectD">
     
-                                                <textarea type="text" class="floatLabel" id="comment"></textarea>
-    
-    
-                                                <label for="comment">Comments</label>
-    
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-    
-    
-    
-    
-                                    </div>
-    
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-    
-                                                <input type="text" class="floatLabel" id="commentsBy" />
-    
-    
-                                                <label for="commentsBy">Comments by:</label>
-    
-                                            </div>
-                                        </div>
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <input type="date" class="floatLabel" id="comment_date">
-                                                <label for="comment_date">Date</label>
-    
-                                            </div>
-    
                                         </div>
                                     </div>
     
-                                    </br>
-    
-                                    <div class="form-row">
-    
-                                        <button type="button" class="buttoncss" id="addComment">Add Comment</button>
-                                        <button type="button" class="buttoncss">Cancel</button>
-    
-    
-                                    </div>
-
-                                    <br>
-                                    
-                              <h5 class="${styles.heading}">Comments</h3>
-                              <div class="${styles.grid}">
-                                  <div id="contentTable">
-                                      <div class="w3-container" id="table">
-                                          <div id="content3">
-                                              <div id="tblcommentsD" class="table-responsive-xl">
-                                                  <div class="form-row">
-                                                      <div class="col-xl-12">
-                                                          <div id="sp_comments_list_SectD">
-
-                                                          </div>
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-
                             </div>
     
                             <div class="legalDept">
-                                    <h5 class="${styles.heading}">For Legal Department Only</h5>
-    
-    
-                                
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <i class="fa fa-sort"></i>
-                                                <input type="text" class="floatLabel2" placeholder="Please select.." id="assignedTo" list='ownersList' />
-    
-                                                <datalist id="ownersList">
+                                <h5 class="${styles.heading}">For Legal Department Only</h5>
     
     
     
-                                                </datalist>
-                                                <label for="assignedTo">Assigned To*</label>
+                                <div class="${styles.grid}">
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <i class="fa fa-sort"></i>
+                                            <input type="text" class="floatLabel2" placeholder="Please select.."
+                                                id="assignedTo" list='ownersList' />
     
-                                            </div>
+                                            <datalist id="ownersList">
+    
+    
+    
+                                            </datalist>
+                                            <label for="assignedTo">Assigned To*</label>
+    
                                         </div>
+                                    </div>
     
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <input type="date" class="floatLabel" id="due_date">
-                                                <label for="due_date">Due Date*</label>
-    
-                                            </div>
-    
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <input type="date" class="floatLabel" id="due_date">
+                                            <label for="due_date">Due Date*</label>
     
                                         </div>
     
     
                                     </div>
     
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <i class="fa fa-sort"></i>
-                                                <input type="text" class="floatLabel2" id="contract_type"
-                                                    list='typesOfContracts_list' placeholder="Please select.." />
     
-                                                <datalist id="typesOfContracts_list">
+                                </div>
+    
+                                <div class="${styles.grid}">
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <i class="fa fa-sort"></i>
+                                            <input type="text" class="floatLabel2" id="contract_type"
+                                                list='typesOfContracts_list' placeholder="Please select.." />
+    
+                                            <datalist id="typesOfContracts_list">
     
     
     
-                                                </datalist>
-                                                <label for="contract_type">Type of Contract*</label>
-    
-                                            </div>
-                                        </div>
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="${styles.controls}">
-                                                <input type="text" class="floatLabel" id="agreement_name">
-                                                <label for="agreement_name">Name of Agreement</label>
-    
-                                            </div>
+                                            </datalist>
+                                            <label for="contract_type">Type of Contract*</label>
     
                                         </div>
                                     </div>
-    
-                                    <div class="${styles.grid}">
-                                        <div class="${styles['col-1-2']}">
-                                            <div class="form-check" style="font-size: large;border: solid 0.5px #c6c6c6;height: 51px;">
-                                                <input type="checkbox" class="" id="checkbox_confidential" name="checkbox_confidential" style="transform: scale(1.9);margin-top: 18px;margin-left: 151px;margin-right: 12px;accent-color: #f07e12;" value="YES">
-    <label for="checkbox" class="form-check-label" style="font-family: Poppins,Arial,sans-serif;">       Confidential</label>
-    
-    
-    
-    
-    </div>
-                                        </div>
-                                        <div class="${styles['col-1-2']}">
-    
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <input type="text" class="floatLabel" id="agreement_name">
+                                            <label for="agreement_name">Name of Agreement</label>
     
                                         </div>
-                                    </div>
-    
-                                    </br>
-    
-                                    <div class="form-row">
-    
-                                        <button type="button" class="buttoncss" id="update_request"><i
-                                                class="fa fa-refresh icon"></i> Save</button>
-                                        <button type="button" class="buttoncss">Cancel</button>
-    
     
                                     </div>
+                                </div>
     
-                                    </br>
-        
+                         
+    
+                                </br>
+    
+                                <div class="form-row">
+    
+                                    <button type="button" class="buttoncss" id="update_request"><i
+                                            class="fa fa-refresh icon"></i> Save</button>
+                                    <button type="button" class="buttoncss">Cancel</button>
+    
+    
+                                </div>
+    
+                                </br>
+    
                             </div>
     
-                        </div>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-`;
+    `;
 
     var table = $('#tbl_other_Parties').DataTable({
       info: false,
@@ -661,6 +733,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     });
 
     $("#uploadFile").css("display", "none");
+    $("#authorisedApproverDiv").css("display", "none");
+
 
     $("#saveToList").click(async (e) => {
 
@@ -790,6 +864,25 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       } else {
 
         $("#uploadFile").css("display", "none");
+
+      }
+
+    });
+
+
+    $("#authority_to_approve_contract").change(function (e) {
+
+      var $el = $(this);
+
+      var value = $el.val();
+
+      if (value == 'Yes') {
+
+        $("#authorisedApproverDiv").css("display", "block");
+
+      } else {
+
+        $("#authorisedApproverDiv").css("display", "none");
 
       }
 
