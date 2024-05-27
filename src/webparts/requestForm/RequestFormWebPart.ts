@@ -15,7 +15,7 @@ import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
 import "@pnp/sp/site-groups/web";
-import { MSGraphClientV3 } from '@microsoft/sp-http';
+import { MSGraphClient } from '@microsoft/sp-http';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
 // import objMyCustomHTML from './Requestor_form';
@@ -53,7 +53,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
-  private graphClient: MSGraphClientV3;
+  private graphClient: MSGraphClient;
 
   protected onInit(): Promise<void> {
     currentUser = this.context.pageContext.user.displayName;
@@ -61,13 +61,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       sp.setup({
         spfxContext: this.context as any
       });
- 
+
       this.context.msGraphClientFactory
-      .getClient("3")
-      .then((client: MSGraphClientV3): void => {
-        this.graphClient = client;
-        resolve();
-      }, err => reject(err));
+        .getClient()
+        .then((client: MSGraphClient): void => {
+          this.graphClient = client;
+          resolve();
+        }, err => reject(err));
     });
   }
 
@@ -83,7 +83,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       department = "Owner";
       console.log("You are an", department);
       // $(".legalDept").css("display", "none");
-     // $('#commentSection').hide();
+      // $('#commentSection').hide();
     }
     else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
       department = "Despatcher";
@@ -387,22 +387,30 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     `;
 
     SPComponentLoader.loadScript('https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js')
-    .then(() => {
-      // return SPComponentLoader.loadScript('//cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/cjs/popper.min.js') 
-    })
-    .then(() => {
-      return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js')
-    })
-    .then(() => {
-      console.log("Scripts loaded successfully");
-    })
-    .catch(error => {
-      console.error("Error loading scripts: " + error);
-    });
+      .then(() => {
+        // return SPComponentLoader.loadScript('//cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/cjs/popper.min.js') 
+      })
+      .then(() => {
+        return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js')
+      })
+      .then(() => {
+        console.log("Scripts loaded successfully");
+      })
+      .catch(error => {
+        console.error("Error loading scripts: " + error);
+      });
 
     const urlParams = new URLSearchParams(window.location.search);
     const updateRequestID = urlParams.get('requestid');
-    
+
+    if (!urlParams.has('requestid')) {
+
+      this.setRequestorDetails();
+
+    }
+
+
+
     //On Update Request
     if (updateRequestID) {
 
@@ -427,20 +435,24 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
       this.renderRequestDetails(updateRequestID);
 
+
       // this.load_comments(updateRequestID);
     }
+
     //New Request
     // else {
-      // $('#rightPanel').hide();
-      // const middlePanelID = document.getElementById('middle-panel');
-      // middlePanelID.style.marginRight = '0%';
-      // middlePanelID.style.width = '83%';
-      // $('#contractStatus').hide();
+    // $('#rightPanel').hide();
+    // const middlePanelID = document.getElementById('middle-panel');
+    // middlePanelID.style.marginRight = '0%';
+    // middlePanelID.style.width = '83%';
+    // $('#contractStatus').hide();
     // }
 
     await this.checkCurrentUsersGroupAsync();
+    var ownerTitle;
 
-    if (department == "Despatcher") {
+
+    if (department === "Despatcher") {
       document.getElementById('legalDeptSection').innerHTML = `
         <h5 class="${styles.heading}">For Legal Department Only</h5>
         <div class="${styles.grid}">
@@ -479,7 +491,23 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       `;
 
       this.getSiteUsers();
+
+      $("#assignedTo").bind('input', () => {
+        const shownVal = (document.getElementById("assignedTo") as HTMLInputElement).value;
+        // var shownVal = document.getElementById("name").value;
+  
+        const value2send = (document.querySelector<HTMLSelectElement>(`#ownersList option[value='${shownVal}']`) as HTMLSelectElement).dataset.value;
+        ownerTitle = value2send;
+        console.log("LOGG", value2send);
+        //  $("#created_by").val(value2send);
+      });
+
+
+
     }
+
+
+
 
     //OtherParties datatable
     var table = $('#tbl_other_Parties').DataTable({
@@ -540,7 +568,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     var content_add;
 
     //Process uploaded file
-    $('#uploadContract').on('change', () => { 
+    $('#uploadContract').on('change', () => {
       const input = document.getElementById('uploadContract') as HTMLInputElement | null;
 
       var file = input.files[0];
@@ -562,7 +590,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Add other parties button functionality
     document.querySelector('#addOtherParties').addEventListener('click', (event) => {
       event.preventDefault();
-      if ($("#other_parties").val() == ""){
+      if ($("#other_parties").val() == "") {
         alert("Please enter a value");
       }
       else {
@@ -571,7 +599,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     });
 
     //Minimize sidebar
-    $('#minimizeButton').on('click', function() {
+    $('#minimizeButton').on('click', function () {
       const navPlaceholderID = document.getElementById('nav-placeholder');
       const middlePanelID = document.getElementById('middle-panel');
       const minimizeButtonID = document.getElementById('minimizeButton') as HTMLElement;
@@ -581,7 +609,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           navPlaceholderID.style.width = '13%';
           middlePanelID.style.marginLeft = '13%';
           minimizeButtonID.style.left = '13%';
-        } 
+        }
         else {
           navPlaceholderID.style.width = '0';
           middlePanelID.style.marginLeft = '0%'
@@ -592,115 +620,124 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
     var newRequestID;
 
+
+
     //Create new request
     $("#saveToList").click(async (e) => {
-      if(department == "Despatcher") {
-        var ifConfidential = "NO";
-        // icon_update.classList.remove('hide');
-        // icon_update.classList.add('show');
-        // icon_update.classList.add('spinning');
-        (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
-  
-        if ($('input[name="checkbox_confidential"]').is(':checked')) {
-          ifConfidential = "YES";
-        }
-  
-        var dataDespatch = {
-          AssignedTo: $("#assignedTo").val(),
-          DueDate: $("#due_date").val(),
-          NameOfAgreement: $("#agreement_name").val(),
-          TypeOfContract: $("#contract_type").val(),
-          Confidential: ifConfidential
-        };
-  
-        await this.assignOwners(parseInt(updateRequestID), dataDespatch);
-  
-        // icon_update.classList.remove('spinning', 'show');
-        // icon_update.classList.add('hide');
-  
-  
-        (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
-      }
-      else {
 
-      
-        // icon_add.classList.remove('hide');
-        // icon_add.classList.add('show');
-        // icon_add.classList.add('spinning');
+      try {
+        if (department == "Despatcher") {
+          var ifConfidential = "NO";
+          // icon_update.classList.remove('hide');
+          // icon_update.classList.add('show');
+          // icon_update.classList.add('spinning');
+          (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
 
-        (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
-
-        const library = "Contracts_ToReview";
-        const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}`;
-
-        //Other Parties data
-        var dataParties = table.rows().data();
-        var allOtherParties = "";
-        dataParties.each(function (value, index) {
-          allOtherParties += `${value};`;
-        });
-
-        //Form data
-        var data = {
-          // Title: "Title",
-          NameOfRequestor: $("#requestor_name").val(),
-          Status_Title: $("#status_title").val(),
-          Email: $("#email").val(),
-          Phone_Number: $("#phone_number").val(),
-          Company: $("#enl_company").val(),
-          Department: $("#department").val(),
-          RequestFor: $("#requestFor").val(),
-          BriefDescriptionTransaction: $("#brief_desc").val(),
-          Party1_agreement: $("#party1").val(),
-          Party2_agreement: $("#party2").val(),
-          Others_parties: allOtherParties,
-          ExpectedCommencementDate: $("#expectedCommenceDate").val(),
-          AuthorityApproveContract: $("#authority_to_approve_contract").val(),
-          AuthorisedApprover: $("#authorisedApprover").val(),
-          Confidential: $("#checkbox_confidential").val()
-          // AssigneeComment: $("#comment").val()
-          // AssignedTo: $("#requestor_name").val(),
-          // DueDate: $("#requestor_name").val(),
-          // TypeOfContract: $("#requestor_name").val(),
-          // NameOfAgreement: $("#requestor_name").val()
-        };
-
-        try {
-          const iar = await sp.web.lists.getByTitle("Contract_Request").items.add(data)
-          .then((iar) => {
-            newRequestID = iar.data.ID;
-          });
-          console.log(newRequestID);
-
-          var dataC = {
-            Request_ID: newRequestID.toString()
+          if ($('input[name="checkbox_confidential"]').is(':checked')) {
+            ifConfidential = "YES";
           }
 
-          console.log(dataC);
+          const despatcher = await sp.web.currentUser();
+
+
+          var dataDespatch = {
+            AssignedTo: $("#assignedTo").val(),
+            DueDate: $("#due_date").val(),
+            NameOfAgreement: $("#agreement_name").val(),
+            TypeOfContract: $("#contract_type").val(),
+            Confidential: ifConfidential,
+            DespatcherEmail: despatcher.Email,
+            OwnerEmail:  ownerTitle
+          };
+
+          await this.assignOwners(parseInt(updateRequestID), dataDespatch);
+
+          // icon_update.classList.remove('spinning', 'show');
+          // icon_update.classList.add('hide');
+
+
+          (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
+        }
+        else {
+
+
+          // icon_add.classList.remove('hide');
+          // icon_add.classList.add('show');
+          // icon_add.classList.add('spinning');
+
+          (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
+
+          const library = "Contracts_ToReview";
+          const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}`;
+
+          //Other Parties data
+          var dataParties = table.rows().data();
+          var allOtherParties = "";
+          dataParties.each(function (value, index) {
+            allOtherParties += `${value};`;
+          });
+
+          //Form data
+          var data = {
+            // Title: "Title",
+            NameOfRequestor: $("#requestor_name").val(),
+            Status_Title: $("#status_title").val(),
+            Email: $("#email").val(),
+            Phone_Number: $("#phone_number").val(),
+            Company: $("#enl_company").val(),
+            Department: $("#department").val(),
+            RequestFor: $("#requestFor").val(),
+            BriefDescriptionTransaction: $("#brief_desc").val(),
+            Party1_agreement: $("#party1").val(),
+            Party2_agreement: $("#party2").val(),
+            Others_parties: allOtherParties,
+            ExpectedCommencementDate: $("#expectedCommenceDate").val(),
+            AuthorityApproveContract: $("#authority_to_approve_contract").val(),
+            AuthorisedApprover: $("#authorisedApprover").val(),
+            Confidential: $("#checkbox_confidential").val()
+            // AssigneeComment: $("#comment").val()
+            // AssignedTo: $("#requestor_name").val(),
+            // DueDate: $("#requestor_name").val(),
+            // TypeOfContract: $("#requestor_name").val(),
+            // NameOfAgreement: $("#requestor_name").val()
+          };
+
           try {
-            await sp.web.lists.getByTitle("Contract_Details").items.add(dataC);
+            const iar = await sp.web.lists.getByTitle("Contract_Request").items.add(data)
+              .then((iar) => {
+                newRequestID = iar.data.ID;
+              });
+            console.log(newRequestID);
+
+            var dataC = {
+              Request_ID: newRequestID.toString()
+            }
+
+            console.log(dataC);
+            try {
+              await sp.web.lists.getByTitle("Contract_Details").items.add(dataC);
+            }
+            catch (error) {
+              console.error('Error adding item in contract_Details:', error);
+              throw error;
+            }
           }
           catch (error) {
-            console.error('Error adding item in contract_Details:', error);
+            console.error('Error adding item:', error);
             throw error;
           }
-        }
-        catch (error) {
-          console.error('Error adding item:', error);
-          throw error;
-        }
 
-        if ($("#requestFor").val() == 'Review of Agreement') {
-          await this.addFolderToDocumentLibrary(library, $("#enl_company").val())
-            .then(async () => {
-              try {
-                await this.addFileToFolder2(folderPath, filename_add, content_add, newRequestID.toString());
-              }
-              catch (e) {
-                console.log(e.message);
-              }
-            });
-        }
+          if ($("#requestFor").val() == 'Review of Agreement') {
+            await this.addFolderToDocumentLibrary(library, $("#enl_company").val())
+              .then(async () => {
+                try {
+                  await this.addFileToFolder2(folderPath, filename_add, content_add, newRequestID.toString());
+                }
+                catch (e) {
+                  console.log(e.message);
+                }
+              });
+          }
 
           alert("Request has been submitted successfully.");
 
@@ -710,7 +747,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
 
           Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Requestor-Dashboard.aspx`, true);
+        }
       }
+      catch (e) {
+
+        console.log("ERROR", e.message);
+      }
+
     });
 
     //Add comment button
@@ -780,6 +823,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     }));
   }
 
+  public async setRequestorDetails() {
+
+    const requestor = await sp.web.currentUser();
+
+    $("#requestor_name").val(requestor.Title);
+    $("#email").val(requestor.Email);
+
+
+  }
+
   // libraryTitle = Contracts_ToReview, foldername = enlCompany.val
   async addFolderToDocumentLibrary(libraryTitle, folderName) {
     try {
@@ -792,7 +845,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
       if (exists) {
         console.log(`Folder '${folderName}' exists.`);
-      } 
+      }
       else {
         const library = sp.web.lists.getByTitle(libraryTitle);
 
@@ -819,7 +872,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       const folder = await library.rootFolder.folders.getByName(folderName).select("Exists").get();
 
       return folder.Exists;
-    } 
+    }
     catch (error) {
       console.error(`Error checking folder existence: ${error.message}`);
       return false;
@@ -830,19 +883,19 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   async addFileToFolder2(folderPath, fileName, fileContent, requestId) {
     try {
       const fileData = await sp.web.getFolderByServerRelativeUrl(folderPath)
-          .files.add(fileName, fileContent, false);
+        .files.add(fileName, fileContent, false);
 
       const item = await fileData.file.getItem();
       await item.update({
-          Request_Id: requestId
+        Request_Id: requestId
       });
 
       console.log('File uploaded successfully.');
       alert('File uploaded successfully.');
     } catch (error) {
-        console.error('Error uploading file:', error);
-        alert('Error uploading file.');
-        throw error;
+      console.error('Error uploading file:', error);
+      alert('Error uploading file.');
+      throw error;
     }
   }
 
@@ -975,7 +1028,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                     $("#status_title").val(item.StatusTitle);
                     $("#email").val(item.Email);
                     $("#phone_number").val(item.Phone_Number),
-                    $("#enl_company").val(item.Company);
+                      $("#enl_company").val(item.Company);
                     $("#department").val(item.Department);
                     $("#requestFor").val(item.RequestFor);
                     $("#party1").val(item.Party1_agreement);
@@ -983,19 +1036,26 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
                     // Other parties populate table
                     // $("#other_parties").val(item.Others_parties);
-                    var othersPartiesVal = item.Others_parties;
-                    othersPartiesVal = othersPartiesVal.replace(/;+$/, '');
-                    var otherPartiesArray = othersPartiesVal.split(';').reverse();
-                    var tbody = document.getElementById('tb_otherParties');
-                    tbody.innerHTML = '';
-                    otherPartiesArray.forEach(function(value) {
-                      var tr = document.createElement('tr');
-                      var td = document.createElement('td');
-                      td.textContent = value.trim();
-                      tr.appendChild(td);
-                      tbody.appendChild(tr);
-                    });
-                    
+
+
+                    if(item.Others_parties !== null && item.Others_parties !== "") {
+                      var othersPartiesVal = item.Others_parties;
+                      othersPartiesVal = othersPartiesVal.replace(/;+$/, '');
+                      var otherPartiesArray = othersPartiesVal.split(';').reverse();
+                      var tbody = document.getElementById('tb_otherParties');
+                      tbody.innerHTML = '';
+                      otherPartiesArray.forEach(function (value) {
+                        var tr = document.createElement('tr');
+                        var td = document.createElement('td');
+                        td.textContent = value.trim();
+                        tr.appendChild(td);
+                        tbody.appendChild(tr);
+                      });
+                    }
+
+
+
+
                     $("#brief_desc").val(item.BriefDescriptionTransaction);
                     $("#expectedCommenceDate").val(item.ExpectedCommencementDate);
                     $("#authority_to_approve_contract").val(item.AuthorityApproveContract);
@@ -1107,18 +1167,33 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   // }
 
   public async getSiteUsers() {
-    var drp_users = document.getElementById("ownersList");
+    var drp_users = document.getElementById("ownersList") as HTMLDataListElement;
     const users: [] = await sp.web.siteUsers();
+
+    if (!drp_users) {
+      console.error("Dropdown element not found");
+      return;
+    }
+
+    // Clear the options of the datalist
+    while (drp_users.options.length > 0) {
+      drp_users.remove();
+    }
+
+
     users.forEach(async (result: ISiteUserInfo) => {
       if (result.UserPrincipalName != null) {
         const groups = await sp.web.siteUsers.getById(result.Id).groups();
         groups.forEach((group) => {
           if (group.Title == "ENL_CMS_Owners") {
             var opt = document.createElement('option');
-            // opt.appendChild(document.createTextNode(result.Id.toString()));
+
             opt.value = result.Title;
+
+            opt.setAttribute('data-value', result.Email);
+            opt.dataset; // Set the title as the display text
             drp_users.appendChild(opt);
-          }   
+          }
         });
       }
     });
