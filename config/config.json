@@ -25,12 +25,21 @@
           "manifest": "./src/webparts/contractForm/ContractFormWebPart.manifest.json"
         }
       ]
+    },
+    "working-area-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/workingArea/WorkingAreaWebPart.js",
+          "manifest": "./src/webparts/workingArea/WorkingAreaWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
     "EnlCmsWebPartStrings": "lib/webparts/enlCms/loc/{locale}.js",
     "RequestFormWebPartStrings": "lib/webparts/requestForm/loc/{locale}.js",
-    "ContractFormWebPartStrings": "lib/webparts/contractForm/loc/{locale}.js"
+    "ContractFormWebPartStrings": "lib/webparts/contractForm/loc/{locale}.js",
+    "WorkingAreaWebPartStrings": "lib/webparts/workingArea/loc/{locale}.js"
   }
 }

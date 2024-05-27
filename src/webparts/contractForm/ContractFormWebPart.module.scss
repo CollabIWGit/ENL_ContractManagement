@@ -14,6 +14,7 @@
 }
 
 .contractForm {
+  padding: 2rem;
   $border: #c6c6c6;
   $border-focus: #9fb1c1;
   $brand-color: #f07a1c;
@@ -192,6 +193,9 @@
     .grid &:last-of-type {
       padding-right: 0;
     }
+  }
+  .col-1 {
+    width: 100%;
   }
   .col-2-3 {
     width: 66.66%;

@@ -2,10 +2,6 @@ import { escape } from '@microsoft/sp-lodash-subset';
 import styles from './RequestFormWebPart.module.scss';
 // require('../../Assets/scripts/styles/custom_styles.css');
 
-
-
-
-
 export default class sample {
 
     public static templateHTML: string =

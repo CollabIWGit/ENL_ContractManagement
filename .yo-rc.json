@@ -11,6 +11,11 @@
     "solutionShortDescription": "enl-contract-management description",
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
+    "nodeVersion": "14.17.5",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
     "componentType": "webpart"
   }
 }

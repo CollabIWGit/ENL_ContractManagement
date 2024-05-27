@@ -11,7 +11,7 @@ $(function () {
           // Check url parameter
           var requestId = getParameterByName('requestid');
           if(requestId){
-            $this.next().addClass(`${styles.active}`);
+          $this.next().addClass(`${styles.active}`);
           }
           
           // on focus add class
@@ -41,26 +41,38 @@ $(function () {
         return decodeURIComponent(results[2].replace(/\+/g, ' '));
       }
 
-    function floatLabel2() {
-        $('.floatLabel2').each(function () {
-            var $this = $(this);
+    // function floatLabel2() {
+    //     $('.floatLabel2').each(function () {
+    //         var $this = $(this);
 
-            var requestId = getParameterByName('requestid');
-            if(requestId){
-              $this.next().next().addClass(`${styles.active}`);
-            }
-            // on focus add cladd active to label
-            $this.focus(function () {
-                $this.next().next().addClass(`${styles.active}`);
-            });
-            //on blur check field and remove class if needed
-            $this.blur(function () {
-                if ($this.val() === '' || $this.val() === 'blank') {
-                    $this.next().next().removeClass();
-                }
-            });
-        });
-    }
+    //         var requestId = getParameterByName('requestid');
+    //         if(requestId){
+    //           $this.next().next().addClass(`${styles.active}`);
+    //         }
+    //         // on focus add cladd active to label
+    //         $this.focus(function () {
+    //             $this.next().next().addClass(`${styles.active}`);
+    //         });
+    //         //on blur check field and remove class if needed
+    //         $this.blur(function () {
+    //             if ($this.val() === '' || $this.val() === 'blank') {
+    //                 $this.next().next().removeClass();
+    //             }
+    //         });
+    //     });
+    // }
     // just add a class of "floatLabel2 to the input field!"
-    floatLabel2();
+    // floatLabel2();
 });
+
+// $('.floatLabel').each(function() {
+//   var $this = $(this);
+//   var $label = $this.next();
+  
+//   // Check url parameter
+  // if ($this.val().trim() !== '') {
+  //   $label.addClass(`${styles.active}`);
+  // } 
+//   else {
+//     $label.removeClass(`${styles.active}`);
+//   }

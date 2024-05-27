@@ -49,7 +49,7 @@
         "ManageActionsGroup": "Manage Actions",
         "AdminMain": "GR_ADMIN_MAIN",
         "AdminSub": "GR_ADMIN_SUB",
-        "Despacher": "ENL_CMS_Despachers",
+        "Despatcher": "ENL_CMS_Despachers",
         "Requestor": "ENL_CMS_Requestors",
         "Owner": "ENL_CMS_Owners" 
     }

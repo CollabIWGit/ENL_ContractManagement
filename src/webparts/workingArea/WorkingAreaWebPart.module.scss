@@ -12,9 +12,13 @@
   [class^="simpleFooterContainer-"] {
     display: none;
   }
+
+  .commandBarWrapper {
+    display: none;
+  }
 }
 
-.requestForm {
+.workingArea {
   padding: 2rem;
   $border: #c6c6c6;
   $border-focus: #9fb1c1;
@@ -39,10 +43,10 @@
     text-align: left;
     width: 100%;
   }
-  // header,
-  // form {
-    // padding: 0em 3%;
-  // }
+  header,
+  form {
+    padding: 0em 3%;
+  }
   
   .form-group {
     margin-bottom: 20px;
@@ -55,7 +59,7 @@
     color: $asphalt;
     border-bottom: 1px solid $asphalt;
     padding-bottom: 3px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
   .heading {
     font-size: 18px;
@@ -65,7 +69,7 @@
     color: $asphalt;
     border-bottom: 1px solid $asphalt;
     padding-bottom: 3px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   } 
   
   .controls {
@@ -85,7 +89,7 @@
       height: 3rem;
       border: 1px solid $border;
       width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 18px;
       color: #888;
       font-family: "Lato", "sans-serif";
       font-size: 16px;
@@ -109,23 +113,23 @@
       cursor: pointer;
     }
     label {
-      // position: absolute;
-      // left: 11px;
-      // top: 9px;
+      position: absolute;
+      left: 11px;
+      top: 9px;
       //width: 60%;
-      // color: #999;
+      color: #999;
       font-size: 16px;
-      // display: inline-block;
-      // padding: 0px 10px;
+      display: inline-block;
+      padding: 0px 10px;
       font-weight: 400;
-      // background-color: rgba(255, 255, 255, 0);
-      // @include transition(color 0.3s, top 0.3s, background-color 0.8s);
-      // background-color: rgba(255, 255, 255, 1);
-      // border-radius: 10px;
-      // text-overflow: ellipsis;
-      // overflow: hidden;
-      // width: 90%;
-      // white-space: nowrap;
+      background-color: rgba(255, 255, 255, 0);
+      @include transition(color 0.3s, top 0.3s, background-color 0.8s);
+      background-color: rgba(255, 255, 255, 1);
+      border-radius: 10px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      width: 90%;
+      white-space: nowrap;
 
   
       &.active {
