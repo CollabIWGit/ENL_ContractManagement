@@ -15,7 +15,7 @@ import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
 import "@pnp/sp/site-groups/web";
-import { MSGraphClientV3 } from '@microsoft/sp-http';
+import { MSGraphClient } from '@microsoft/sp-http';
 // import { SPComponentLoader } from '@microsoft/sp-loader';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
 // import objMyCustomHTML from './Requestor_form';
@@ -43,6 +43,7 @@ require('./../../common/css/common.css');
 require('../../../node_modules/@fortawesome/fontawesome-free/css/all.min.css');
 
 let currentUser: string;
+var department;
 
 export interface IWorkingAreaWebPartProps {
   description: string;
@@ -50,7 +51,7 @@ export interface IWorkingAreaWebPartProps {
 
 export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAreaWebPartProps> {
 
-  private graphClient: MSGraphClientV3;
+  private graphClient: MSGraphClient;
 
   protected onInit(): Promise<void> {
     currentUser = this.context.pageContext.user.displayName;
@@ -60,8 +61,8 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       });
  
       this.context.msGraphClientFactory
-      .getClient("3")
-      .then((client: MSGraphClientV3): void => {
+      .getClient()
+      .then((client: MSGraphClient): void => {
         this.graphClient = client;
         resolve();
       }, err => reject(err));
@@ -231,6 +232,19 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       // icon_add_comment.classList.add('spinning');
 
       const currentUser = await sp.web.currentUser();
+      let role;
+
+      if(department === "Requestor"){
+
+        role = "Requestor";
+
+      }
+      else if(department === "Owner"){
+        role = "Owner";
+      }
+      else{
+        role = "Despatcher";
+      }
 
       const data = {
 
@@ -238,7 +252,8 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
         RequestID: requestID,
         Comment: $("#comment").val(),
         CommentBy: currentUser.UserPrincipalName,
-        CommentDate: moment().format("DD/MM/YYYY HH:mm")
+        CommentDate: moment().format("DD/MM/YYYY HH:mm"),
+        Role: role
       };
 
       console.log(data);
@@ -334,6 +349,33 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     });
 
   }
+
+  public async checkCurrentUsersGroupAsync() {
+    let groupList = await sp.web.currentUser.groups();
+
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.Requestor).length == 1) {
+      department = "Requestor";
+      console.log("You are a requestor", department);
+      // $(".legalDept").css("display", "none");
+    }
+    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Owner).length == 1) {
+      department = "Owner";
+      console.log("You are an", department);
+      // $(".legalDept").css("display", "none");
+      // $('#commentSection').hide();
+    }
+    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
+      department = "Despatcher";
+      console.log("You are a", department);
+      // $(".legalDept").css("display", "block");
+    }
+    else {
+      department = "null";
+      console.log("You are not in any group");
+      // $(".legalDept").css("display", "none");
+    }
+  }
+
 
   //Load Timeline comments
   public async load_comments(updateRequestID) {
