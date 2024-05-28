@@ -17,16 +17,14 @@ export class sideMenuUtils {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <nav id="sidebar">
-      <img id="imgLogo" src="https://frcidevtest.sharepoint.com/sites/ContractMgt/Site%20Assets/enl_logo_blue.png" alternate="ENL-logo" style="
-      vertical-align: middle;
-      margin-left: 25%;
-      width: 50%;
-      margin-bottom: 15%;">
+      <div style="font-size: xxx-large; text-align: center; width: 100%; padding: 4rem 0rem; font-weight: 600;">
+        <span style="color: white;">Legal</span><span style="color: #ff2738;">Link</span>
+      </div>
+
       <ul class="list-unstyled components mb-5">
         <li>
           <a id="contractMgthome"><span class="fas fa-columns mr-3"></span>Home</a>
         </li>
-
         <li>
           <a id="despatcherDashboard"><span class="fas fa-tasks mr-3"></span>Despatcher Dashboard</a>
         </li>
@@ -37,7 +35,10 @@ export class sideMenuUtils {
           <a id="requestorDashboard"><span class="fas fa-tasks mr-3"></span>Requestor Dashboard</a>
         </li>     
       </ul>
-  </nav>`;
+      <div>
+        <img id="imgLogo" src="https://frcidevtest.sharepoint.com/sites/ContractMgt/Site%20Assets/ENlnRogersLogo.png" alternate="ENL-logo" style="bottom: 20px; width: 100%; position: absolute;">
+      </div>
+    </nav>`;
 
     $("#nav-placeholder").html(navbar);
     this.sideMenuNavigation(absoluteUrl);

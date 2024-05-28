@@ -8291,7 +8291,7 @@ h1, h2, h3, h4, h5,
   /* min-width: 250px;
   max-width: 250px; */
   min-width: 100%;
-  background: #144578;
+  background: #062470;
   color: #fff;
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
@@ -8329,7 +8329,7 @@ h1, h2, h3, h4, h5,
       border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
       #sidebar ul li a:hover {
         color: #fff;
-        background-color: #ef7d17;
+        background-color: #fb7500;
         /* border-bottom: 1px solid #2f89fc; } */
       }
     #sidebar ul li.active > a {
