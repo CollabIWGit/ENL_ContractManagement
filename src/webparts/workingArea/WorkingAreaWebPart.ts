@@ -220,6 +220,8 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
         </div>
     `;
 
+    await this.checkCurrentUsersGroupAsync();
+
     console.log(styles);
 
     //Generate Side Menu
