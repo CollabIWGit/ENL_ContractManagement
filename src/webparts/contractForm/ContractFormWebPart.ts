@@ -10,7 +10,7 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 import styles from './ContractFormWebPart.module.scss';
 import * as strings from 'ContractFormWebPartStrings';
 import { sp, List, IItemAddResult, UserCustomActionScope, Items, Item, ITerm, ISiteGroup, ISiteGroupInfo } from "@pnp/sp/presets/all";
-import { MSGraphClient } from '@microsoft/sp-http';
+import { MSGraphClientV3 } from '@microsoft/sp-http';
 import * as moment from 'moment';
 import * as $ from 'jquery';
 import {
@@ -41,7 +41,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
     private _isDarkTheme: boolean = false;
     private _environmentMessage: string = '';
-    private graphClient: MSGraphClient;
+    private graphClient: MSGraphClientV3;
 
 
     protected onInit(): Promise<void> {
@@ -52,8 +52,8 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
           });
      
           this.context.msGraphClientFactory
-          .getClient()
-          .then((client: MSGraphClient): void => {
+          .getClient('3')
+          .then((client: MSGraphClientV3): void => {
             this.graphClient = client;
             resolve();
           }, err => reject(err));

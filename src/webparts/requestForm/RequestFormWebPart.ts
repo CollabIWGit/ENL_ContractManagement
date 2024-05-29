@@ -15,7 +15,7 @@ import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
 import "@pnp/sp/site-groups/web";
-import { MSGraphClient } from '@microsoft/sp-http';
+import { MSGraphClientV3 } from '@microsoft/sp-http';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
 // import objMyCustomHTML from './Requestor_form';
@@ -53,7 +53,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
-  private graphClient: MSGraphClient;
+  private graphClient: MSGraphClientV3;
 
   protected onInit(): Promise<void> {
     currentUser = this.context.pageContext.user.displayName;
@@ -63,8 +63,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       });
 
       this.context.msGraphClientFactory
-        .getClient()
-        .then((client: MSGraphClient): void => {
+        .getClient('3')
+        .then((client: MSGraphClientV3): void => {
           this.graphClient = client;
           resolve();
         }, err => reject(err));
@@ -746,7 +746,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
           (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
 
-          Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Requestor-Dashboard.aspx`, true);
+          Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Dashboard.aspx`, true);
         }
       }
       catch (e) {

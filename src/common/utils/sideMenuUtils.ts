@@ -17,23 +17,14 @@ export class sideMenuUtils {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <nav id="sidebar">
-      <div style="font-size: xxx-large; text-align: center; width: 100%; padding: 4rem 0rem; font-weight: 600;">
+      <div style="font-size: 2.5rem; text-align: center; width: 100%; padding: 4rem 0rem; font-weight: 600;">
         <span style="color: white;">Legal</span><span style="color: #ff2738;">Link</span>
       </div>
 
       <ul class="list-unstyled components mb-5">
         <li>
-          <a id="contractMgthome"><span class="fas fa-columns mr-3"></span>Home</a>
-        </li>
-        <li>
-          <a id="despatcherDashboard"><span class="fas fa-tasks mr-3"></span>Despatcher Dashboard</a>
-        </li>
-        <li>
-          <a id="ownerDashboard"><span class="fas fa-tasks mr-3"></span>Owner Dashboard</a>
-        </li>
-        <li>
-          <a id="requestorDashboard"><span class="fas fa-tasks mr-3"></span>Requestor Dashboard</a>
-        </li>     
+          <a id="contractMgthome"><span class="fas fa-columns mr-3"></span>Dashboard</a>
+        </li>   
       </ul>
       <div>
         <img id="imgLogo" src="https://frcidevtest.sharepoint.com/sites/ContractMgt/Site%20Assets/ENlnRogersLogo.png" alternate="ENL-logo" style="bottom: 20px; width: 100%; position: absolute;">
@@ -47,24 +38,24 @@ export class sideMenuUtils {
 
   public sideMenuNavigation(absoluteUrl: string) {
     $("#contractMgthome").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/ENL-Home.aspx`, true);
+      Navigation.navigate(`${absoluteUrl}/SitePages/Dashboard.aspx`, true);
     });
 
-    $("#despatcherDashboard").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/Despatcher-Dashboard.aspx`, true);
-    });
+    // $("#despatcherDashboard").on("click", () => {
+    //   Navigation.navigate(`${absoluteUrl}/SitePages/Despatcher-Dashboard.aspx`, true);
+    // });
 
-    $("#ownerDashboard").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/Owner-Dashboard.aspx`, true);
-    });
+    // $("#ownerDashboard").on("click", () => {
+    //   Navigation.navigate(`${absoluteUrl}/SitePages/Owner-Dashboard.aspx`, true);
+    // });
 
-    $("#requestorDashboard").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/Requestor-Dashboard.aspx`, true);
-    });
+    // $("#requestorDashboard").on("click", () => {
+    //   Navigation.navigate(`${absoluteUrl}/SitePages/Requestor-Dashboard.aspx`, true);
+    // });
 
-    $("#auditTrailDashboard").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/Audit-Trail-Dashboard.aspx`, true);
-    });
+    // $("#auditTrailDashboard").on("click", () => {
+    //   Navigation.navigate(`${absoluteUrl}/SitePages/Audit-Trail-Dashboard.aspx`, true);
+    // });
 
     // $("#addCompany").on("click", () => {
     //   Navigation.navigate(`${absoluteUrl}/SitePages/Requestor-Form.aspx`, true);

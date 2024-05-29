@@ -15,7 +15,7 @@ import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
 import "@pnp/sp/site-groups/web";
-import { MSGraphClient } from '@microsoft/sp-http';
+import { MSGraphClientV3 } from '@microsoft/sp-http';
 // import { SPComponentLoader } from '@microsoft/sp-loader';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
 // import objMyCustomHTML from './Requestor_form';
@@ -51,7 +51,7 @@ export interface IWorkingAreaWebPartProps {
 
 export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAreaWebPartProps> {
 
-  private graphClient: MSGraphClient;
+  private graphClient: MSGraphClientV3;
 
   protected onInit(): Promise<void> {
     currentUser = this.context.pageContext.user.displayName;
@@ -61,15 +61,15 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       });
  
       this.context.msGraphClientFactory
-      .getClient()
-      .then((client: MSGraphClient): void => {
+      .getClient('3')
+      .then((client: MSGraphClientV3): void => {
         this.graphClient = client;
         resolve();
       }, err => reject(err));
     });
   }
 
-  public render(): void {
+  public async render(): Promise<void> {
     this.domElement.innerHTML = `
     <style>
     .main-container {
@@ -144,6 +144,31 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       border-bottom: 1px solid black;
       margin-bottom: 0.5rem;
     }
+
+    .fileUploadBtn {
+      display: inline-block;
+      padding: 6px 12px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      color: #333;
+  }
+  
+  .fileUploadBtn {
+      background-color: #e2e2e2;
+  }
+
+  #addComment {
+    cursor: pointer;
+    background-color: #062470;
+    border: none;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 16px;
+    width: 40%;
+    border-radius: 5px;
+  }
   
   </style>
   
@@ -160,7 +185,28 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
             <div id="workingAreaForm" style="width: 100%; height: 100%; padding: 2%">
 
               <div id="section_review_contract">
-                <div id="tbl_contract" style="margin-top: 1.5em;"></div>
+                  <div class="col-md-12 table-responsive"  style="border-bottom: 2px solid;">
+                    <table class="table" id="table1">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="th-lg" scope="col">Contract</th>
+                                <th scope="col">View</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <div id="tbl_contract" style="margin-top: 1.5em;">
+
+                    </div>
+                  </div>
+              </div>
+
+              <br>
+
+              <div class="${styles['col-1-2']}">
+                <div class="${styles.controls}" id="uploadFile" class="fileUploadBtn">
+                  <label for="uploadContract">Upload Contract to Review</label>
+                  <input type="file"  id="uploadContract">
+                </div>
               </div>
 
             </div>
@@ -201,7 +247,11 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       </div>
     `;
 
-    this.renderRequestDetails(requestID);
+    const companyList = await sp.web.lists.getByTitle("Contract_Request").items.select("Company").filter(`ID eq ${requestID}`).get();
+    const companyName = companyList[0].Company;
+    console.log(companyList, companyName);
+
+    this.renderRequestDetails(requestID, companyName);
     this.load_comments(requestID);
 
     //Minimize sidebar
@@ -268,15 +318,115 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       $("#comment").val("");
 
     });
+
+    var filename_add;
+    var content_add;
+
+    //Process uploaded file
+    $('#uploadContract').on('change', async () => {
+      const input = document.getElementById('uploadContract') as HTMLInputElement | null;
+
+      var file = input.files[0];
+      var reader = new FileReader();
+
+      reader.onload = ((file1) => {
+        return (e) => {
+          console.log(file1.name);
+
+          filename_add = file1.name,
+            content_add = e.target.result
+
+        };
+      })(file);
+
+      reader.readAsArrayBuffer(file);
+
+      const library = "Contracts_ToReview";
+      const folderPath = `/sites/ContractMgt/Contracts_ToReview/${companyName}/${requestID}`;
+
+      await this.addFolderToDocumentLibrary(library, requestID)
+        .then(async () => {
+          try {
+            await this.addFileToFolder2(folderPath, filename_add, content_add, requestID.toString());
+          }
+          catch (e) {
+            console.log(e.message);
+          }
+      });
+
+      this.renderRequestDetails(requestID, companyName);
+      
+    });
   
   }
 
-  private async renderRequestDetails(id: any) {
+  async addFolderToDocumentLibrary(libraryTitle, folderName) {
+    try {
+      // Initialize the PnP JS Library
 
-    const companyList = await sp.web.lists.getByTitle("Contract_Request").items.select("Company").filter(`ID eq ${id}`).get();
-    const companyName = companyList[0].Company;
+      // Replace with the folder name you want to check
 
-    console.log(companyList, companyName);
+      //Check existence of company folder
+      const exists = await this.folderExists(libraryTitle, folderName);
+
+      if (exists) {
+        console.log(`Folder '${folderName}' exists.`);
+      }
+      else {
+        const library = sp.web.lists.getByTitle(libraryTitle);
+
+        // Create a new folder
+        await library.rootFolder.folders.add(folderName);
+
+        console.log(`Folder '${folderName}' created successfully.`);
+      }
+
+      // Get the document library by title
+
+    } catch (error) {
+      console.error(`Error creating folder: ${error.message}`);
+    }
+  }
+
+  async addFileToFolder2(folderPath, fileName, fileContent, requestId) {
+    try {
+      const fileData = await sp.web.getFolderByServerRelativeUrl(folderPath)
+        .files.add(fileName, fileContent, false);
+
+      const item = await fileData.file.getItem();
+      await item.update({
+        Request_Id: requestId
+      });
+
+      console.log('File uploaded successfully.');
+      alert('File uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file.');
+      throw error;
+    }
+  }
+
+  async folderExists(libraryTitle, folderName) {
+    try {
+      // Initialize the PnP JS Library
+      // Get the document library by title
+      const library = sp.web.lists.getByTitle(libraryTitle);
+
+      // Check if the folder exists
+      const folder = await library.rootFolder.folders.getByName(folderName).select("Exists").get();
+
+      return folder.Exists;
+    }
+    catch (error) {
+      console.error(`Error checking folder existence: ${error.message}`);
+      return false;
+    }
+  }
+
+  private async renderRequestDetails(id: any, companyName: string) {
+
+    $("#tbl_contract").html('');
 
     $("#section_review_contract").css("display", "block");
 
@@ -287,16 +437,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
 
         let html: string = '<div class="form-row">';
         html += `
-            <div class="col-md-12 table-responsive"  style="border-bottom: 2px solid;">
-                <table class="table" id="table1">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th class="th-lg" scope="col">Contract</th>
-                            <th scope="col">View</th>
-                        </tr>
-                    </thead>
-                </table>
-                <div style="max-height: 300px; overflow-y: scroll;">
+                <div style="width: 100%; max-height: 300px; overflow-y: scroll;">
                     <table class="table">
                         <tbody>
         `;
@@ -411,8 +552,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
       timelineItem.className = 'timeline-item';
       timelineItem.innerHTML = `
         <div style="display: flex">
-          <p style="margin-bottom: 0px">#${userTitle} -&nbsp;</p>
-          ${commentDate}
+          <p style="margin-bottom: 0px; font-style: italic; color: #3870ff">#${userTitle} -&nbsp; ${commentDate}</p>
         </div>
         <div>${comment}</div>
       `;
@@ -437,7 +577,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     try {
       let folderPath = libraryName + "/" + companyName + "/" + reqId;
       let currentWebUrl = this.context.pageContext.web.absoluteUrl;
-      let requestUrl = `${currentWebUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files`;
+      let requestUrl = `${currentWebUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files?$orderby=TimeCreated desc`;
 
       const response = await fetch(requestUrl, {
         method: 'GET',
