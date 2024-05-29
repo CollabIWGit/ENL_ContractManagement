@@ -458,16 +458,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         <div class="${styles.grid}">
           <div class="${styles['col-1-2']}">
             <div class="${styles.controls}">
-              <input type="text"  placeholder="Please select.." id="assignedTo" list='ownersList' />
               <label for="assignedTo">Assigned To*</label>
+              <input type="text"  placeholder="Please select.." id="assignedTo" list='ownersList' />
               <datalist id="ownersList"></datalist>
             </div>
           </div>
 
           <div class="${styles['col-1-2']}">
             <div class="${styles.controls}">
-              <input type="date"  id="due_date">
               <label for="due_date">Due Date*</label>
+              <input type="date"  id="due_date">
             </div>
           </div>
         </div>
@@ -475,16 +475,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         <div class="${styles.grid}">
           <div class="${styles['col-1-2']}">
             <div class="${styles.controls}">
-              <input type="text"  id="contract_type" list='typesOfContracts_list' placeholder="Please select.." />
               <label for="contract_type">Type of Contract*</label>
+              <input type="text"  id="contract_type" list='typesOfContracts_list' placeholder="Please select.." />
               <datalist id="typesOfContracts_list"></datalist>
             </div>
           </div>
 
           <div class="${styles['col-1-2']}">
             <div class="${styles.controls}">
-              <input type="text"  id="agreement_name">
               <label for="agreement_name">Name of Agreement</label>
+              <input type="text"  id="agreement_name">
             </div>
           </div>
         </div>
@@ -657,6 +657,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
 
           (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
+          Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Dashboard.aspx`, true);
         }
         else {
 
@@ -666,9 +667,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           // icon_add.classList.add('spinning');
 
           (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
-
-          const library = "Contracts_ToReview";
-          const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}`;
 
           //Other Parties data
           var dataParties = table.rows().data();
@@ -726,6 +724,9 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             console.error('Error adding item:', error);
             throw error;
           }
+
+          const library = "Contracts_ToReview";
+          const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}/${newRequestID}`;
 
           if ($("#requestFor").val() == 'Review of Agreement') {
             await this.addFolderToDocumentLibrary(library, $("#enl_company").val())
