@@ -16,7 +16,13 @@
   .commandBarWrapper {
     display: none!important;
   }
+
+  [data-automation-id="CanvasControl"] {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }
+
 
 .workingArea {
   padding: 2rem;
@@ -150,7 +156,7 @@
   
   button {
     cursor: pointer;
-    background-color: #144578;
+    background-color: #062470;
     border: none;
     color: #fff;
     padding: 12px 16px;
@@ -282,4 +288,12 @@
       color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
     }
   }
+}
+
+.table {
+  width: 100%!important;
+}
+
+.table tr:hover {
+  background-color: rgb(239, 125, 23, 0.1);
 }

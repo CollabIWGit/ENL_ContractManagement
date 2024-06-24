@@ -141,7 +141,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 <div id="middle-panel" class="middle-panel">
                     <button id="minimizeButton"></button>
                     <div class="${styles.contractForm}" id="form_checklist">
-                        <form id="requestor_form" style=" position: relative; border: 1px solid #ccc; padding: 20px; box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%); padding: 2em; border-radius: 1rem; width: 100%;">
+                        <form id="requestor_form" style="position: relative; width: 100%;">
                             
                             <p id="contractStatusUp" style="color: green; position: absolute; top: 0; right: 0; margin: 1%;">Status: In progress</p>
                             
@@ -154,22 +154,22 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" id="contract_name" class="floatLabel">
                                         <label for="contract_name">Name of Contract*</label>
+                                        <input type="text" id="contract_name">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="internal_ref_num">
                                         <label for="internal_ref_num">Internal Reference Number*</label>
+                                        <input type="text" id="internal_ref_num">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="contractStatus">
                                         <label for="contractStatus">Status*</label>
+                                        <input type="text" id="contractStatus">
                                     </div>
                                 </div>
 
@@ -196,12 +196,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="partyENL_Rogers_name">
+                                        <input type="text" id="partyENL_Rogers_name">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="partyENL_Rogers_person">
+                                        <input type="text" id="partyENL_Rogers_person">
                                     </div>
                                 </div>
 
@@ -212,12 +212,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party2_name">
+                                        <input type="text" id="party2_name">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party2_person">
+                                        <input type="text" id="party2_person">
                                     </div>
                                 </div>
 
@@ -228,12 +228,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party3_name">
+                                        <input type="text" id="party3_name">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party3_person">
+                                        <input type="text" id="party3_person">
                                     </div>
                                 </div>
 
@@ -244,12 +244,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party4_name">
+                                        <input type="text" id="party4_name">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party4_person">
+                                        <input type="text" id="party4_person">
                                     </div>
                                 </div>
 
@@ -260,54 +260,54 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party5_name">
+                                        <input type="text" id="party5_name">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="party5_person">
+                                        <input type="text" id="party5_person">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="contractType">
                                         <label for="contractType">Type of Contract*</label>
+                                        <input type="text" id="contractType">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="contractValue">
                                         <label for="contractValue">Value of Contract*</label>
+                                        <input type="text" id="contractValue">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="approvedBy">
                                         <label for="approvedBy">Approved by</label>
+                                        <input type="text" id="approvedBy">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="date" class="floatLabel" id="signatureDate">
                                         <label for="signatureDate">Date of Signature*</label>
+                                        <input type="date" id="signatureDate">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="date" class="floatLabel" id="effectDate">
                                         <label for="effectDate">Date of Effect*</label>
+                                        <input type="date" id="effectDate">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="date" class="floatLabel" id="expiryDate">
                                         <label for="expiryDate">Date of Expiry</label>
+                                        <input type="date" id="expiryDate">
                                     </div>
                                 </div>
                                 
@@ -315,67 +315,67 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                     <div style="display: flex; flex-direction: column;">
                                         <p style="margin-bottom: 0px;">Term of Contract*</p>
                                         <div style="display: flex;">
-                                            <input type="radio" name="termOfContractRBG" value="Indefinite">
                                             <label style="margin-bottom: 0px; margin-left: 5px;" for="termOfContractIndefinite">Indefinite</label>
+                                            <input type="radio" name="termOfContractRBG" value="Indefinite">
                                         </div>
                                         <div style="display: flex;">
-                                            <input type="radio" name="termOfContractRBG" value="Fixed Term">
                                             <label style="margin-bottom: 0px; margin-left: 5px;" for="termOfContractFixedTerm">Fixed Term</label>
+                                            <input type="radio" name="termOfContractRBG" value="Fixed Term">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}" style="margin-bottom: 5px;">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="initial_duration">
                                         <label for="initial_duration">Duration (Initial)</label>
+                                        <input type="text" id="initial_duration">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}" style="margin-bottom: 5px;">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="renewed_duration">
                                         <label for="renewed_duration">Duration (Renewed)</label>
+                                        <input type="text" id="renewed_duration">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="noticePeriodTermination">
                                         <label for="noticePeriodTermination">Notice period for termination*</label>
+                                        <input type="text" id="noticePeriodTermination">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="noticePeriodExtensionRenewal">
                                         <label for="noticePeriodExtensionRenewal">Notice Period for renewal/extension</label>
+                                        <input type="text" id="noticePeriodExtensionRenewal">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="date" class="floatLabel" id="renewalTerms">
                                         <label for="renewalTerms">Renewal Terms</label>
+                                        <input type="date" id="renewalTerms">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-2-3']}">
                                     <div class="${styles.controls}">
-                                        <textarea type="text" class="floatLabel" id="salientTerms" style="height: 8rem; margin-bottom: 10px;"></textarea>
                                         <label for="salientTerms">Salient Terms</label>
+                                        <textarea type="text" id="salientTerms" style="height: 10.3rem; margin-bottom: 10px;"></textarea>
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="jurisdiction">
                                         <label for="jurisdiction">Jurisdiction*</label>
+                                        <input type="text" id="jurisdiction">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="disputeResolution">
                                         <label for="disputeResolution">Dispute Resolution</label>
+                                        <input type="text" id="disputeResolution">
                                     </div>
                                 </div>
 
@@ -386,14 +386,14 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="addendaName">
                                         <label for="addendaName">Name</label>
+                                        <input type="text" id="addendaName">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1']}">
                                     <div class="${styles.controls}">
-                                        <input type="date" class="floatLabel" id="addendaDate">
                                         <label for="addendaDate">Date</label>
+                                        <input type="date" id="addendaDate">
                                     </div>
                                 </div>
 
@@ -510,23 +510,23 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <p>Compliance SEM/DEM/FSC</p>
+                                        <p style="margin-top: 3.5rem;">Compliance SEM/DEM/FSC</p>
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="radio" name="complianceRBG" value="Yes">
+                                        <input type="radio" name="complianceRBG" value="Yes" style="margin-top: 3.5rem;">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="radio" name="complianceRBG" value="No">
+                                        <input type="radio" name="complianceRBG" value="No" style="margin-top: 3.5rem;">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="ComplianceDetails">
                                         <label for="ComplianceDetails">Details</label>
+                                        <input type="text" id="ComplianceDetails">
                                     </div>
                                 </div>
 
@@ -555,36 +555,36 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <p>External Legal advice sought</p>
+                                        <p style="margin-top: 3.5rem;">External Legal advice sought</p>
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="radio" name="ELAS_RBG" value="Yes">
+                                        <input type="radio" name="ELAS_RBG" value="Yes" style="margin-top: 3.5rem;">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="radio" name="ELAS_RBG" value="No">
+                                        <input type="radio" name="ELAS_RBG" value="No" style="margin-top: 3.5rem;">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-4']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="ELAS_Name">
                                         <label for="ELAS_Name">Name</label>
+                                        <input type="text" id="ELAS_Name">
                                     </div>
                                 </div>
 
                                 <div class="${styles['col-1-2']}">
                                     <div class="${styles.controls}">
-                                        <textarea type="text" class="floatLabel" id="breachDetails" style="height: 10rem;"></textarea>
                                         <label for="breachDetails">Details of Breach (if any)</label>
+                                        <textarea type="text" id="breachDetails" style="height: 10rem;"></textarea>
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-2']}">
                                     <div class="${styles.controls}">
-                                        <textarea type="text" class="floatLabel" id="litigationDetails" style="height: 10rem;"></textarea>
                                         <label for="litigationDetails">Details of Litigation (if any)</label>
+                                        <textarea type="text" id="litigationDetails" style="height: 10rem;"></textarea>
                                     </div>
                                 </div>
 
@@ -595,14 +595,14 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="lastUpdatedOn">
                                         <label for="lastUpdatedOn">On</label>
+                                        <input type="text" id="lastUpdatedOn">
                                     </div>
                                 </div>
                                 <div class="${styles['col-1-3']}">
                                     <div class="${styles.controls}">
-                                        <input type="text" class="floatLabel" id="lastUpdatedBy">
                                         <label for="lastUpdatedBy">By</label>
+                                        <input type="text" id="lastUpdatedBy">
                                     </div>
                                 </div>
 

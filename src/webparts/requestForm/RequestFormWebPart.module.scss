@@ -12,14 +12,23 @@
   [class^="simpleFooterContainer-"] {
     display: none;
   }
+
+  .commandBarWrapper {
+    display: none!important;
+  }
+
+  [data-automation-id="CanvasControl"] {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }
 
 .requestForm {
-  padding: 2rem;
+  padding: 1rem 2rem;
   $border: #c6c6c6;
   $border-focus: #9fb1c1;
-  $brand-color: #f07a1c;
-  $booking-green: #f07a1c;
+  $brand-color: #fb7500;
+  $booking-green: #fb7500;
   $asphalt: #506982;
   
    
@@ -153,7 +162,7 @@
   
   button {
     cursor: pointer;
-    background-color: #144578;
+    background-color: #062470;
     border: none;
     color: #fff;
     padding: 12px 16px;

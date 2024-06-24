@@ -391,7 +391,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         // return SPComponentLoader.loadScript('//cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/cjs/popper.min.js') 
       })
       .then(() => {
-        return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js')
+        return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js');
       })
       .then(() => {
         console.log("Scripts loaded successfully");
@@ -457,10 +457,10 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         <h5 class="${styles.heading}">For Legal Department Only</h5>
         <div class="${styles.grid}">
           <div class="${styles['col-1-2']}">
-            <div class="${styles.controls}">
+            <div id="assignOwners" class="${styles.controls}">
               <label for="assignedTo">Assigned To*</label>
               <input type="text"  placeholder="Please select.." id="assignedTo" list='ownersList' />
-              <datalist id="ownersList"></datalist>
+              <datalist id="ownersList" style="color: blue"></datalist>
             </div>
           </div>
 
@@ -512,7 +512,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //OtherParties datatable
     var table = $('#tbl_other_Parties').DataTable({
       info: false,
-      responsive: true,
+      // responsive: true,
       pageLength: 5
     });
 
@@ -579,7 +579,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           console.log(file1.name);
 
           filename_add = file1.name,
-            content_add = e.target.result
+            content_add = e.target.result;
 
         };
       })(file);
@@ -612,15 +612,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
         else {
           navPlaceholderID.style.width = '0';
-          middlePanelID.style.marginLeft = '0%'
+          middlePanelID.style.marginLeft = '0%';
           minimizeButtonID.style.left = '0%';
         }
       }
     });
 
     var newRequestID;
-
-
 
     //Create new request
     $("#saveToList").click(async (e) => {
@@ -689,7 +687,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             Party1_agreement: $("#party1").val(),
             Party2_agreement: $("#party2").val(),
             Others_parties: allOtherParties,
-            ExpectedCommencementDate: $("#expectedCommenceDate").val(),
+            ExpectedCommencementDate: $("#expectedCommenceDate").val().toString(),
             AuthorityApproveContract: $("#authority_to_approve_contract").val(),
             AuthorisedApprover: $("#authorisedApprover").val(),
             Confidential: $("#checkbox_confidential").val()
@@ -709,7 +707,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
             var dataC = {
               Request_ID: newRequestID.toString()
-            }
+            };
 
             console.log(dataC);
             try {
@@ -725,11 +723,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             throw error;
           }
 
+          //Root Document library
           const library = "Contracts_ToReview";
+          //Final path in which document will be stored
           const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}/${newRequestID}`;
-
+          console.log("Test 1");
           if ($("#requestFor").val() == 'Review of Agreement') {
-            await this.addFolderToDocumentLibrary(library, $("#enl_company").val())
+            await this.addFolderToDocumentLibrary(library, $("#enl_company").val(), newRequestID.toString())
               .then(async () => {
                 try {
                   await this.addFileToFolder2(folderPath, filename_add, content_add, newRequestID.toString());
@@ -740,7 +740,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               });
           }
 
-          alert("Request has been submitted successfully.");
+          alert(`Request ${newRequestID} has been submitted successfully.`);
 
           // icon_add.classList.remove('spinning', 'show');
           // icon_add.classList.add('hide');
@@ -756,6 +756,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       }
 
     });
+
+
 
     //Add comment button
     // $("#addComment").click(async (e) => {
@@ -789,10 +791,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     // });
   }
 
+
   //New row for other parties
   addNewOtherPartiesRow(table: any, party) {
     table.row.add([party]).draw(false);
-    $("#other_parties").val("")
+    $("#other_parties").val("");
   }
 
   public async load_companies() {
@@ -828,56 +831,107 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
     const requestor = await sp.web.currentUser();
 
+    console.log("req:", requestor);
+
     $("#requestor_name").val(requestor.Title);
     $("#email").val(requestor.Email);
 
-
   }
 
-  // libraryTitle = Contracts_ToReview, foldername = enlCompany.val
-  async addFolderToDocumentLibrary(libraryTitle, folderName) {
+  async addFolderToDocumentLibrary(libraryTitle, companyFolderName, contractFolderName) {
+    const library = sp.web.lists.getByTitle(libraryTitle);
+
     try {
-      // Initialize the PnP JS Library
+      const exists = await this.folderExists(library, companyFolderName, contractFolderName);
 
-      // Replace with the folder name you want to check
-
-      //Check existence of company folder
-      const exists = await this.folderExists(libraryTitle, folderName);
-
-      if (exists) {
-        console.log(`Folder '${folderName}' exists.`);
+      //None exists
+      if(exists === "noneExist"){
+        //Create company folder
+        await library.rootFolder.folders.add(companyFolderName);
+        console.log(`Company Folder '${companyFolderName}' created successfully.`);
+        //Create contract folder
+        await library.rootFolder.folders.getByName(companyFolderName).folders.add(contractFolderName);
+        console.log(`Contract Folder '${contractFolderName}' created successfully.`);
       }
-      else {
-        const library = sp.web.lists.getByTitle(libraryTitle);
-
-        // Create a new folder
-        await library.rootFolder.folders.add(folderName);
-
-        console.log(`Folder '${folderName}' created successfully.`);
+      else if(exists === "companyOnly"){
+        //Create contract folder
+        await library.rootFolder.folders.getByName(companyFolderName).folders.add(contractFolderName);
+        console.log(`Contract Folder '${contractFolderName}' created successfully.`);
+      }
+      else if(exists === "allExist"){
+        console.log(`All folders already exist.`);
       }
 
-      // Get the document library by title
-
-    } catch (error) {
-      console.error(`Error creating folder: ${error.message}`);
-    }
-  }
-
-  async folderExists(libraryTitle, folderName) {
-    try {
-      // Initialize the PnP JS Library
-      // Get the document library by title
-      const library = sp.web.lists.getByTitle(libraryTitle);
-
-      // Check if the folder exists
-      const folder = await library.rootFolder.folders.getByName(folderName).select("Exists").get();
-
-      return folder.Exists;
     }
     catch (error) {
-      console.error(`Error checking folder existence: ${error.message}`);
-      return false;
+      console.error(`Error creating folder: ${error.message}`);
     }
+
+    // try {
+    //   console.log(1);
+    //   //Check existence of company folder
+    //   const exists = await this.folderExists(libraryTitle, companyFolderName, contractFolderName);
+
+    //   if(exists == 'allExist'){
+    //     console.log(9);
+    //     console.log(`All folders exist.`);
+    //   }
+    //   else {
+    //     console.log(10);
+    //     if(exists == 'noneExist'){
+    //       // Create a new company folder
+    //       const library = sp.web.lists.getByTitle(libraryTitle);
+    //       await library.rootFolder.folders.add(companyFolderName);
+    //       console.log(`Company Folder '${companyFolderName}' created successfully.`);
+    //     }
+        //  console.log(`Contract Folder '${contractFolderName}'`);
+        // const library = sp.web.lists.getByTitle(libraryTitle);
+        // await library.rootFolder.folders.add(contractFolderName);
+        // console.log(`Contract Folder '${contractFolderName}' created successfully.`);
+      // }
+
+      // Get the document library by title
+
+    // } catch (error) {
+    //   console.log(11);
+    //   console.error(`Error creating folder: ${error.message}`);
+    // }
+  }
+
+  async folderExists(library, companyFolderName, contractFolderName) {
+
+    let existResponse = "";
+
+    // Check if company folder exists
+    try {
+      const companyFolder = await library.rootFolder.folders.getByName(companyFolderName).select("Exists").get();
+      console.log("Company folder exists");
+      //Company folder exists
+      if(companyFolder.Exists){
+        try{
+          const contractFolder = await library.rootFolder.folders.getByName(companyFolderName).folders.getByName(contractFolderName).select("Exists").get();
+          if(contractFolder.Exists){
+            console.log("Contract folder exists");
+            existResponse = "allExist"; 
+            return existResponse;
+          }
+        }
+        catch(error){
+          console.log(error);
+          console.log("Contract folder does not exist");
+          existResponse = "companyOnly"; 
+          return existResponse;
+        }
+      }
+    }
+    catch (error) {
+      //Company folder does not exist
+      console.log(error);
+      console.log("Company folder does not exist");
+      existResponse = "noneExist"; 
+      return existResponse;
+    }
+
   }
 
   //If file name already exists, file will not be uploaded
@@ -899,6 +953,59 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       throw error;
     }
   }
+
+  // async addFileToFolder2(folderPath, fileName, fileContent, requestId, userEmail, role) {
+  //   try {
+  //     // Add the file to the folder
+  //     const fileData = await sp.web.getFolderByServerRelativeUrl(folderPath)
+  //       .files.add(fileName, fileContent, false);
+  
+  //     // Get the list item associated with the file
+  //     const item = await fileData.file.getItem();
+  //     await item.update({
+  //       Request_Id: requestId
+  //     });
+  
+  //     // Get the file's list item to manage permissions
+  //     const fileItem: any = sp.web.getFileByServerRelativeUrl(fileData.data.ServerRelativeUrl);
+  
+  //     // Break permission inheritance (stop inheriting permissions from the parent folder/library)
+  //     await fileItem.breakRoleInheritance(true);
+  
+  //     // Get the user to assign permissions
+  //     const user = await sp.web.ensureUser(userEmail);
+  
+  //     // Define the role (permissions) to assign (e.g., 'read', 'contribute', etc.)
+  //     let roleDef;
+  //     switch (role.toLowerCase()) {
+  //       case 'read':
+  //         roleDef = sp.web.roleDefinitions.getByName('Read');
+  //         break;
+  //       case 'contribute':
+  //         roleDef = sp.web.roleDefinitions.getByName('Contribute');
+  //         break;
+  //       case 'edit':
+  //         roleDef = sp.web.roleDefinitions.getByName('Edit');
+  //         break;
+  //       case 'full control':
+  //         roleDef = sp.web.roleDefinitions.getByName('Full Control');
+  //         break;
+  //       default:
+  //         roleDef = sp.web.roleDefinitions.getByName('Read');
+  //     }
+  
+  //     // Assign the permissions to the user
+  //     await fileItem.roleAssignments.add(user.data.Id, roleDef.Id);
+  
+  //     console.log('File uploaded and permissions set successfully.');
+  //     alert('File uploaded and permissions set successfully.');
+  //   } catch (error) {
+  //     console.error('Error uploading file or setting permissions:', error);
+  //     alert('Error uploading file or setting permissions.');
+  //     throw error;
+  //   }
+  // }
+  
 
   //Render Update Request Details
   private renderRequestDetails(id: any) {
@@ -958,7 +1065,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       date = item.DueDate;
                     }
                     else {
-                      date = moment(new Date(item.DueDate)).format("DD/MM/YYYY HH:mm")
+                      date = moment(new Date(item.DueDate)).format("DD/MM/YYYY HH:mm");
                     }
 
                     if (item.RequestFor == 'Review of Agreement') {
@@ -1167,38 +1274,164 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   //   }
   // }
 
+  //Original
+  // public async getSiteUsers() {
+  //   const MasterList = await sp.web.lists.getByTitle("Contract_Request").items.getAll();
+  //   let items: any[] = MasterList.filter(item => item.AssignedTo !== null);
+  //   console.log("All contracts", items);
+
+  //   var drp_users = document.getElementById("ownersList") as HTMLDataListElement;
+  //   const users: [] = await sp.web.siteUsers();
+
+  //   if (!drp_users) {
+  //     console.error("Dropdown element not found");
+  //     return;
+  //   }
+
+  //   // Clear the options of the datalist
+  //   while (drp_users.options.length > 0) {
+  //     drp_users.remove();
+  //   }
+
+
+  //   users.forEach(async (result: ISiteUserInfo) => {
+  //     if (result.UserPrincipalName != null) {
+  //       const groups = await sp.web.siteUsers.getById(result.Id).groups();
+  //       groups.forEach((group) => {
+  //         if (group.Title == "ENL_CMS_Owners") {
+  //           var opt = document.createElement('option');
+
+  //           opt.value = result.Title;
+
+  //           opt.setAttribute('data-value', result.Email);
+  //           opt.dataset; // Set the title as the display text
+  //           drp_users.appendChild(opt);
+  //         }
+  //       });
+  //     }
+  //   });
+  // }
+
   public async getSiteUsers() {
-    var drp_users = document.getElementById("ownersList") as HTMLDataListElement;
-    const users: [] = await sp.web.siteUsers();
-
-    if (!drp_users) {
-      console.error("Dropdown element not found");
-      return;
-    }
-
-    // Clear the options of the datalist
-    while (drp_users.options.length > 0) {
-      drp_users.remove();
-    }
-
-
-    users.forEach(async (result: ISiteUserInfo) => {
-      if (result.UserPrincipalName != null) {
-        const groups = await sp.web.siteUsers.getById(result.Id).groups();
-        groups.forEach((group) => {
-          if (group.Title == "ENL_CMS_Owners") {
-            var opt = document.createElement('option');
-
-            opt.value = result.Title;
-
-            opt.setAttribute('data-value', result.Email);
-            opt.dataset; // Set the title as the display text
-            drp_users.appendChild(opt);
-          }
-        });
+    const drp_users = document.getElementById("ownersList") as HTMLDataListElement;
+    const allUsers = await sp.web.siteUsers();
+    
+    // Fetch all contracts
+    const MasterList = await sp.web.lists.getByTitle("Contract_Request").items.getAll();
+    const filteredMasterList: any[] = MasterList.filter(item => item.AssignedTo !== null);
+    
+    // Array to store users who belong to the "Owners" group
+    const ownerUsers: ISiteUserInfo[] = [];
+    
+    // Fetch and filter users who belong to the "Owners" group
+    for (const user of allUsers) {
+      if (user.UserPrincipalName != null) {
+        const groups = await sp.web.siteUsers.getById(user.Id).groups();
+        const isOwner = groups.some(group => group.Title === "ENL_CMS_Owners");
+        if (isOwner) {
+          ownerUsers.push(user);
+        }
       }
+    }
+    
+    // Create a list that will contain the owner.Title, owner.email, and the number of contracts
+    const ownersWithContractCount = ownerUsers.map(owner => {
+      const contractCount = filteredMasterList.filter(item => item.AssignedTo === owner.Title).length;
+      return {
+        Title: owner.Title,
+        Email: owner.Email,
+        ContractCount: contractCount
+      };
     });
+    
+    console.log("Owners with contract count:", ownersWithContractCount);
+    
+    // Populate the dropdown list
+    if (drp_users) {
+      // Clear the options of the datalist
+      while (drp_users.options.length > 0) {
+        drp_users.remove();
+      }
+    
+      ownersWithContractCount.forEach(owner => {
+        const opt = document.createElement('option');
+        opt.value = `${owner.Title}`;
+        opt.text = `Contract Count: ${owner.ContractCount}`;
+        opt.setAttribute('data-value', owner.Email);
+        drp_users.appendChild(opt);
+      });
+    } else {
+      console.error("Dropdown element not found");
+    }
+
+    const css = `
+    #assignOwners #ownersList {
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 5px;
+      width: 200px;
+    }
+    #assignOwners #ownersList option {
+      padding: 5px;
+      border-bottom: 1px solid #ccc;
+    }
+    #assignOwners #ownersList option:hover {
+      background-color: #f2f2f2;
+    }
+  `;
+  const style = document.createElement('style');
+  style.type = 'text/css';
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
+
   }
+
+  // public async getSiteUsers() {
+  //   // Retrieve the master list of all contracts and filter it
+  //   const MasterList = await sp.web.lists.getByTitle("Contract_Request").items.getAll();
+  //   let items: any[] = MasterList.filter(item => item.AssignedTo !== null);
+  //   console.log("All contracts", items);
+  
+  //   var drp_users = document.getElementById("ownersList") as HTMLDataListElement;
+  //   const users: ISiteUserInfo[] = await sp.web.siteUsers();
+  
+  //   if (!drp_users) {
+  //     console.error("Dropdown element not found");
+  //     return;
+  //   }
+  
+  //   // Clear the options of the datalist
+  //   while (drp_users.options.length > 0) {
+  //     drp_users.remove();
+  //   }
+  
+  //   // Create a map to count the number of contracts assigned to each user
+  //   const contractCounts = items.reduce((acc, item) => {
+  //     const assignedTo = item.AssignedTo.Title;
+  //     if (acc[assignedTo]) {
+  //       acc[assignedTo]++;
+  //     } else {
+  //       acc[assignedTo] = 1;
+  //     }
+  //     return acc;
+  //   }, {} as Record<string, number>);
+  
+  //   // Populate the dropdown list
+  //   for (const result of users) {
+  //     if (result.UserPrincipalName != null) {
+  //       const groups = await sp.web.siteUsers.getById(result.Id).groups();
+  //       const isOwner = groups.some(group => group.Title === "ENL_CMS_Owners");
+  //       if (isOwner) {
+  //         const contractCount = contractCounts[result.Title] || 0;
+  //         var opt = document.createElement('option');
+  //         opt.value = `${result.Title} (${contractCount} contracts)`;
+  //         opt.setAttribute('data-value', result.Email);
+  //         drp_users.appendChild(opt);
+  //       }
+  //     }
+  //   }
+  // }
+  
 
   private async assignOwners(id: any, item: any) {
     const list = sp.web.lists.getByTitle("Contract_Request");
