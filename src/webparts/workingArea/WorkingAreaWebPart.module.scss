@@ -290,10 +290,220 @@
   }
 }
 
-.table {
-  width: 100%!important;
+// .contractContainer{
+//   padding: 1rem 0rem;
+// }
+
+// .contractVersionsTable {
+//   width: 100%;
+
+//   thead th {
+//     background-color: #f2f2f2;
+//     position: sticky;
+//     top: 0;
+//     z-index: 1;
+//     border-left: none;
+//     border-right: none;
+//     border-top: none;
+//   }
+
+  // th, td {
+  //   border-left: none;
+  //   border-right: none;
+  //   border-top: none;
+  //   border-bottom: 1px solid #ddd;
+  //   padding: 8px;
+  //   word-wrap: break-word;
+  //   overflow-wrap: break-word;
+  //   white-space: normal;
+  // }
+
+  // tbody {
+  //   display: block;
+  //   max-height: 250px;
+  //   overflow-y: auto;
+  // }
+// }
+
+// [id^="tableContracts"] {
+//   input, label, [class^="dataTables_info"], a {
+//     display: none!important;
+//   }
+// }
+
+// .table tr:hover {
+//   background-color: rgb(239, 125, 23, 0.1);
+// }
+
+// .table input {
+//   display: none;
+// }
+
+// .table tbody tr td,
+// .table thead tr th {
+//   text-align: center;
+// }
+
+// #tableContracts tbody tr td,
+// #tableContracts thead tr th,
+// #contractsDatatable tbody tr td,
+// #contractsDatatable thead tr th {
+//   text-align: center;
+// }
+
+// #tableContractsyy thead,
+// #contractsDatatable thead {
+//   padding-right: 12px;
+// }
+
+// thead, tbody tr {
+//   display: table;
+//   width: 100%;
+//   table-layout: fixed;
+// }
+
+.contractContainer {
+  padding: 0px;
+  padding-top: 1rem;
 }
 
-.table tr:hover {
-  background-color: rgb(239, 125, 23, 0.1);
+.contractContainer::-webkit-scrollbar {
+  height: 5px;
+}
+
+.contractContainer::-webkit-scrollbar-thumb {
+  background-color: #062470;
+  border-radius: 10px;
+}
+
+.contractContainer::-webkit-scrollbar-track {
+  background-color: #f2f2f2;
+}
+
+.existingFilesDatatable {
+  width: 100%!important;
+  table-layout: fixed;
+  font-size: 14px;
+  line-height: 1.5;
+
+  tbody {
+    text-align: center;
+  }
+}
+
+.existingFilesDatatable th,
+.existingFilesDatatable td {
+  white-space: normal; /* Allow text to wrap onto multiple lines */
+  word-wrap: break-word; /* Break words that exceed container width */
+}
+
+.existingFilesDatatable th {
+  background-color: #f2f2f2; /* Example background color for table headers */
+}
+
+
+.contractVersionsTable {
+  width: 100%!important;
+  border-collapse: collapse;
+  border-bottom: 0px!important;
+
+  thead th {
+    text-align: center;
+    background-color: #f2f2f2;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: 8px;
+    padding-top: 0px;
+  }
+
+  th, td {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  tbody {
+    text-align: center;
+    display: block;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  thead, tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  /* Custom scrollbar styling */
+  tbody::-webkit-scrollbar {
+    width: 7px; /* Thinner scrollbar */
+  }
+
+  tbody::-webkit-scrollbar-thumb {
+    background-color: #062470;
+    border-radius: 10px; /* Rounded corners */
+  }
+
+  tbody::-webkit-scrollbar-track {
+    background-color: #f2f2f2; /* Light background for the track */
+  }
+}
+
+[id^="contractsDatatable"] {
+  [class^="dataTables_filter"] {
+    label, input {
+      display: none !important;
+    }
+  }
+
+  [class^="dataTables_length"] {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+
+    select {
+      border: none;
+      border-bottom: 2px solid #062470;;
+    }
+  }
+}
+
+[id^="tableContracts"] {
+  input, label, [class^="dataTables_info"], a {
+    display: none !important;
+  }
+}
+
+.datatableBtn {
+  border: none;
+  background: none;
+  cursor: pointer; 
+}
+
+.datatableBtnImg {
+  width: 24px;
+  height: 24px;
+}
+
+.hideDisplay{
+  display: none;
+}
+
+.contractDetailsFS{
+  padding: 0rem 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.datatableLegends{
+  margin-left: 1rem;
 }

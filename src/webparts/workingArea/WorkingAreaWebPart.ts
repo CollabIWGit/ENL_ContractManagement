@@ -105,8 +105,8 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     }
   
     .darker {
-      border-color: #ccc;
-      background-color: #ddd;
+      border-color: #bbb;
+      background-color: #ccc;
     }
   
     .container::after {
@@ -169,6 +169,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
         margin-left: 13%;
         margin-right: 27%;
         transition: width 0.5s ease, margin 0.5s ease;
+        position: relative;
     }
   
     .form-container {
@@ -283,22 +284,6 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
   border-radius: 5px;
 }
 
-#tableContracts tbody tr td {
-  padding: 3px;
-}
-
-.contract-details {
-  display: flex;
-  justify-content: space-between;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 5px 20px;
-  width: 50rem;
-  margin: 0 auto;
-  position: relative;
-}
-
 .column {
   flex: 1;
   display: flex;
@@ -337,49 +322,6 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
   border: solid #ef7d17;
 }
 
-.table-responsive {
-  max-height: 305px; /* Adjust as needed */
-  overflow: hidden;
-}
-
-#tableContracts {
-  width: 100%;
-  border-collapse: collapse; /* Ensure borders do not collapse */
-  table-layout: fixed; /* Ensure the table layout is fixed to align columns properly */
-}
-
-thead th {
-  background-color: #f2f2f2;
-  position: sticky;
-  top: 0;
-  z-index: 1; /* Ensure the header is above the body */
-  border-left: none;
-  border-right: none;
-  border-top: none;
-}
-
-th, td {
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  border-bottom: 1px solid #ddd;
-  padding: 8px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal; /* Allow text to wrap */
-}
-
-tbody {
-  display: block;
-  max-height: 250px; /* Adjust the height as needed */
-  overflow-y: auto;
-}
-
-thead, tbody tr {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-}
 .contract-name-col {
   width: 30%;
 }
@@ -393,19 +335,32 @@ thead, tbody tr {
 }
 
 .view-col {
-  width: 10%;
+  width: 5%;
 }
 
 .column-width-8 {
   width: 8%;
 }
 
-#contractsDatatable tbody tr td,
-#contractsDatatable thead tr th {
-  text-align: center;
+.contract-details {
+  padding: 0rem 1rem;
 }
-#contractsDatatable thead {
-  padding-right: 12px;
+
+fieldset {
+  border: 1px solid #062470;
+  overflow: hidden;
+}
+
+legend {
+  width: auto;
+  margin-bottom: 0;
+  font-size: 1.2rem;
+  color: #062470;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
 
@@ -420,44 +375,30 @@ thead, tbody tr {
           <div id="nav-placeholder" class="left-panel"></div>
   
           <div id="middle-panel" class="middle-panel">
-
-            <h2 style="margin-top: 0.7rem; margin-left: 2rem;">Working Area</h2>
   
             <button id="minimizeButton"></button>
-      
-            <div class="contract-details">
 
-              <p id="contractStatus" style="color: green; position: absolute; top: 0; right: 0; margin: 0.5% 2%;">Status: In Progress</p>
+            <p id="contractStatus" style="color: green; font-size: x-large; position: absolute; top: 0; right: 0; margin: 0.5% 2%;">In Progress</p>
 
-              <div class="column">
-                <div class="detail">
-                  <label>Contract Name:</label>
-                  <span>${NameOfAgreement}</span>
-                </div>
-                <div class="detail">
-                  <label>Company:</label>
-                  <span>${companyName}</span>
-                </div>
-              </div>
-              <div class="column">
-                <div class="detail">
-                  <label>Requestor:</label>
-                  <span>${NameOfRequestor}</span>
-                </div>
-                <div class="detail">
-                  <label>Owner:</label>
-                  <span>${Owner}</span>
-                </div>
-              </div>
+            <h2 style="margin-top: 0.7rem; margin-left: 2rem; margin-bottom: 0;">Working Area</h2>
 
-            </div>
-          
+            <section class="contract-details">
+              <fieldset class="${styles.contractDetailsFS}">
+                <legend>CONTRACT ID: ${requestID}</legend>
+                <div class="details-grid">
+                  <div><strong>Contract Name:</strong> <span>${NameOfAgreement}</span></div>
+                  <div><strong>Requestor:</strong> <span>${NameOfRequestor}</span></div>
+                  <div><strong>Company:</strong> <span>${companyName}</span></div>
+                  <div><strong>Owner:</strong> <span>${Owner}</span></div>
+                </div>
+              </fieldset>
+            </section>
             
-            <div id="workingAreaForm" style="width: 100%; padding: 2%">
+            <div id="workingAreaForm" style="width: 100%; padding: 1rem;">
 
-              <div class="col-md-12 table-responsive"  style="border-bottom: 2px solid;">
-                  <div id="tbl_contract"></div>
-              </div>
+              <fieldset id="tbl_contract" class="${styles.contractContainer, styles.hideDisplay}">
+                <legend class="${styles.datatableLegends}">CONTRACT VERSIONS</legend>
+              </fieldset>
 
               <br>
               
@@ -469,7 +410,9 @@ thead, tbody tr {
 
               <br>
 
-              <div id="contractsDatatableDiv"></div>
+              <fieldset id="contractsDatatableDiv" class="${styles.contractContainer, styles.hideDisplay}">
+                <legend class="${styles.datatableLegends}">LegalLink EXISTING FILES</legend>
+              </fieldset>
             
             </div>
 
@@ -492,6 +435,8 @@ thead, tbody tr {
   
         </div>
     `;
+
+    $('#tbl_contract').show();
 
     //Display buttons for working area
     if(department !== "Requestor"){
@@ -660,18 +605,19 @@ thead, tbody tr {
 
     //Use template button
     $("#useContractTemplate").click(async (e) => {
+      $('#contractsDatatableDiv').show();
 
       const searchBarHTML = `
-      <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files" />
-      <img id="searchButton" src="${absoluteUrl}/Site%20Assets/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
-      <div id="searchResults"></div>
-    `;
+        <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" />
+        <img id="searchButton" src="${absoluteUrl}/Site%20Assets/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
+        <div id="searchResults"></div>
+      `;
     
     // Append table to container
     $('#sharepointSearch').html(searchBarHTML);
     
     // Bind SharePoint search to image button
-    this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(siteUrl, companyName, requestID));
+    this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(absoluteUrl, siteUrl, companyName, requestID));
 
       // const useTemplateLoader = document.getElementById('useTemplateLoader');
       // useTemplateLoader.style.display = 'Block';
@@ -696,16 +642,16 @@ thead, tbody tr {
         const allDocuments = await this.fetchDocumentsFromLibrary(siteUrl, libraryName);
         console.log(allDocuments);
         const tableHtml = `
-            <table id="contractsDatatable" class="${styles.table}">
+            <table id="contractsDatatable" class="${styles.existingFilesDatatable}">
               <thead>
                 <tr>
                   <th class="column-width-12">Company</th>
-                  <th class="column-width-12">Contract</th>
+                  <th class="column-width-8">ID</th>
                   <th class="contract-name-col">Document Name</th>
                   <th class="column-width-12">Created</th>
                   <th class="column-width-12">Last Modified</th>
-                  <th class="view-col">Preview</th>
-                  <th class="column-width-8">Select</th>
+                  <th class="view-col"></th>
+                  <th class="view-col"></th>
                 </tr>
               </thead>
               <tbody>
@@ -714,7 +660,8 @@ thead, tbody tr {
         `;
   
         // Append table to container
-        $('#contractsDatatableDiv').html(tableHtml);
+        const existingFilesContainer: Element = this.domElement.querySelector('#contractsDatatableDiv');
+        existingFilesContainer.innerHTML += tableHtml;
 
         console.log('All documents:', allDocuments);
   
@@ -725,31 +672,39 @@ thead, tbody tr {
             data: allDocuments,
             columns: [
                 { data: 'Company', className: 'column-width-12' },
-                { data: 'Contract', className: 'column-width-12' },
+                { data: 'Contract', className: 'column-width-8' },
                 { data: 'DocumentName', className: 'contract-name-col' },
                 { data: 'Created', className: 'column-width-12' },
                 { data: 'Modified', className: 'column-width-12' },
                 {
-                    data: null, className: 'view-col', render: function (data, type, row) {
-                        return `<button class="preview-btn" data-url="${row.DocumentUrl}">Preview</button>`;
-                    }
+                  data: null, className: 'view-col', render: function (data, type, row) {
+                      return `
+                        <button id="previewExistingFileBtn" data-url="${row.DocumentUrl}" title="Preview Document" class="${styles.datatableBtn}">
+                          <img src="${absoluteUrl}/Site%20Assets/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
+                        </button>
+                      `;
+                  }
                 },
                 {
-                    data: null, className: 'column-width-8', render: function (data, type, row) {
-                        return `<button class="select-btn" data-url="${row.sourceUrl}">Select</button>`;
+                    data: null, className: 'view-col', render: function (data, type, row) {
+                        return `
+                          <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
+                            <img src="${absoluteUrl}/Site%20Assets/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
+                          </button>
+                        `;
                     }
                 }
             ],
           });
   
           // Attach click event to the preview buttons
-          $('#contractsDatatable').on('click', '.preview-btn', function () {
+          $('#contractsDatatable').on('click', '#previewExistingFileBtn', function () {
             const url = $(this).data('url');
             console.log('iframe url:', url);
             createFloatingIframe(url);
           });
   
-          $('#contractsDatatable').on('click', '.select-btn', async (e) => {
+          $('#contractsDatatable').on('click', '#selectExistingFileBtn', async (e) => {
             const sourceUrl = $(e.currentTarget).data('url');
   
             const filename = await prompt("Enter the filename:");
@@ -826,14 +781,14 @@ thead, tbody tr {
 
   }
 
-  private async handleSearch(siteUrl, companyName, requestID): Promise<void> {
+  private async handleSearch(absoluteUrl, siteUrl, companyName, requestID): Promise<void> {
     const query = (this.domElement.querySelector('#searchQuery') as HTMLInputElement).value;
     const libraryName = 'Contracts_ToReview';
 
     if (query) {
       const results = await this.searchLibrary(siteUrl, query, libraryName);
       console.log("Results Here:", results);
-      this.displayResults(results, companyName, requestID);
+      this.displayResults(absoluteUrl, results, companyName, requestID);
     }
   }
 
@@ -874,7 +829,7 @@ thead, tbody tr {
     return filteredResults;
   }
 
-  private displayResults(results: Array<{ Title: string, CreatedDate: string, ModifiedDate: string, sourceUrl: string, documentUrl: string}>, companyName, requestID): void {
+  private displayResults(absoluteUrl, results: Array<{ Title: string, CreatedDate: string, ModifiedDate: string, sourceUrl: string, documentUrl: string}>, companyName, requestID): void {
     console.log(results);
     $('#contractsDatatable tbody').empty();
 
@@ -904,13 +859,21 @@ thead, tbody tr {
         { data: 'Modified' },
         // { data: 'ModifiedBy' },
         {
-            data: 'DocumentUrl', render: function (data, type, row) {
-                return `<button class="preview-btn" data-url="${row.DocumentUrl}">Preview</button>`;
-            }
+          data: null, className: 'view-col', render: function (data, type, row) {
+              return `
+                <button id="previewExistingFileBtn" data-url="${row.DocumentUrl}" title="Preview Document" class="${styles.datatableBtn}">
+                  <img src="${absoluteUrl}/Site%20Assets/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
+                </button>
+              `;
+          }
         },
         {
-            data: 'sourceUrl', render: function (data, type, row) {
-                return `<button class="select-btn" data-url="${row.sourceUrl}">Select</button>`;
+            data: null, className: 'view-col', render: function (data, type, row) {
+                return `
+                  <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
+                    <img src="${absoluteUrl}/Site%20Assets/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
+                  </button>
+                `;
             }
         }
       ]
@@ -1109,114 +1072,115 @@ thead, tbody tr {
   // }
   
   private async renderRequestDetails(id: any, companyName: string) {
-
-    $("#tbl_contract").html('');
-
-    // $("#section_review_contract").css("display", "block");
+    // $("#tbl_contract").html('');
 
     this.getFileDetailsByFilter('Contracts_ToReview', id, companyName)
-      .then((fileDetailsArray) => {
-        if (fileDetailsArray && fileDetailsArray.length > 0) {
-          console.log("File details:", fileDetailsArray);
+        .then((fileDetailsArray) => {
+            if (fileDetailsArray && fileDetailsArray.length > 0) {
+                console.log("File details:", fileDetailsArray);
 
-          let html: string = '';
-          
-          html += `
-                    <table id="tableContracts" class="table">
-                      <thead class="thead-dark">
-                        <tr>
-                          <th class="th-lg contract-name-col" scope="col">Contract Name</th>
-                          <th class="column-width-15" scope="col">Created At</th>
-                          <th class="column-width-15" scope="col">Last modified By</th>
-                          <th class="column-width-15" scope="col">Last modified At</th>
-                          <th class="column-width-15" scope="col">Uploaded By</th>
-
-                          <th class="view-col" scope="col">View</th>
-                        </tr>
-                      </thead>
-                      <tbody class="table-body">
-        `;
-
-          let requestorFlag = false;
-
-          fileDetailsArray.forEach(fileItem => {
-            const formattedTimeCreated = new Date(fileItem.TimeCreated).toLocaleDateString('en-GB');
-            // const formattedTimeLastModified = new Date(fileItem.TimeLastModified).toLocaleDateString('en-GB');
-            const unformattedLastModified = new Date(fileItem.TimeLastModified);
-            const day = ('0' + unformattedLastModified.getDate()).slice(-2);
-            const month = ('0' + (unformattedLastModified.getMonth() + 1)).slice(-2);
-            const year = unformattedLastModified.getFullYear();
-            const hours = ('0' + unformattedLastModified.getHours()).slice(-2);
-            const minutes = ('0' + unformattedLastModified.getMinutes()).slice(-2);
-            const seconds = ('0' + unformattedLastModified.getSeconds()).slice(-2);
-
-            const formattedTimeLastModified = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-
-
-            html += `
-                <tr>
-                    <td class="contract-name-col" scope="row">${fileItem.Name}</td>
-                    <td class="column-width-15" scope="row">${formattedTimeCreated}</td>
-                    <td class="column-width-15" scope="row">${fileItem.ModifiedBy.Title}</td>
-                    <td class="column-width-15" scope="row">${formattedTimeLastModified}</td>
-                    <td class="column-width-15" scope="row">${fileItem.Author.Title}</td>
-                    `;
-                    if (department !== "Requestor" || !requestorFlag) {
-                    html+=`
-                    <td class="column-width-8">
-                        <ul class="list-inline m-0">
-                            <li class="list-inline-item">
-                                <button id="btn_view_${fileItem.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="tooltip" data-placement="top" title="View" style="display: none;">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </li>
-                            <li class="list-inline-item">
-                                <button id="modalActivate_${fileItem.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="modal" data-target="#exampleModalPreview" style="display: block; width: auto;">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-            `;
-            }
-            else{
-              html+=`
-                    <td style="width: 8%;"></td>
-            `;
-            }
-            requestorFlag = true;
-          });
-
-          html += `
+                const tableHtml = `
+                    <table id="tableContracts" class="${styles.contractVersionsTable}">
+                        <thead>
+                            <tr>
+                                <th class="th-lg contract-name-col" scope="col">ContractName</th>
+                                <th class="column-width-15" scope="col">CreatedAt</th>
+                                <th class="column-width-15" scope="col">LastModifiedBy</th>
+                                <th class="column-width-15" scope="col">LastModifiedAt</th>
+                                <th class="column-width-15" scope="col">UploadedBy</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         </tbody>
                     </table>
-        `;
+                `;
 
-          const listContainer: Element = this.domElement.querySelector('#tbl_contract');
-          listContainer.innerHTML = html;
+                const listContainer: Element = this.domElement.querySelector('#tbl_contract');
+                listContainer.innerHTML += tableHtml;
 
-          fileDetailsArray.forEach(fileDetails => {
-            if(department !== "Requestor"){
-              $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                window.open(`ms-word:ofv|u|https://frcidevtest.sharepoint.com/${fileDetails.ServerRelativeUrl}`, '_blank');
-              });
+                let requestorFlag = false;
+
+                const tableData = fileDetailsArray.map(fileItem => {
+                    const formattedTimeCreated = new Date(fileItem.TimeCreated).toLocaleDateString('en-GB');
+                    const unformattedLastModified = new Date(fileItem.TimeLastModified);
+                    const day = ('0' + unformattedLastModified.getDate()).slice(-2);
+                    const month = ('0' + (unformattedLastModified.getMonth() + 1)).slice(-2);
+                    const year = unformattedLastModified.getFullYear();
+                    const hours = ('0' + unformattedLastModified.getHours()).slice(-2);
+                    const minutes = ('0' + unformattedLastModified.getMinutes()).slice(-2);
+                    const seconds = ('0' + unformattedLastModified.getSeconds()).slice(-2);
+                    const formattedTimeLastModified = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+                    return {
+                        Name: fileItem.Name || 'N/A',
+                        CreatedAt: formattedTimeCreated || 'N/A',
+                        ModifiedBy: fileItem.ModifiedBy?.Title || 'N/A',
+                        LastModifiedAt: formattedTimeLastModified || 'N/A',
+                        UploadedBy: fileItem.Author?.Title || 'N/A',
+                        UniqueId: fileItem.UniqueId,
+                        Url: `ms-word:ofv|u|https://frcidevtest.sharepoint.com${fileItem.ServerRelativeUrl}`,
+                        department
+                    };
+                });
+
+                $('#tableContracts').DataTable({
+                    data: tableData,
+                    columns: [
+                        { data: 'Name', className: 'contract-name-col' },
+                        { data: 'CreatedAt', className: 'column-width-15' },
+                        { data: 'ModifiedBy', className: 'column-width-15' },
+                        { data: 'LastModifiedAt', className: 'column-width-15' },
+                        { data: 'UploadedBy', className: 'column-width-15' },
+                        {
+                          data: null, className: 'view-col', render: function (data, type, row) {
+                              if (row.department !== "Requestor" || !requestorFlag) {
+                                  requestorFlag = true;
+                                  return `
+                                      <ul class="list-inline m-0">
+                                          <li class="list-inline-item">
+                                              <button id="btn_view_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="tooltip" data-placement="top" title="View" style="display: none;">
+                                                  <i class="fas fa-eye"></i>
+                                              </button>
+                                          </li>
+                                          <li class="list-inline-item">
+                                              <button id="modalActivate_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="modal" data-target="#exampleModalPreview" style="display: block; width: auto;">
+                                                  <i class="fas fa-eye"></i>
+                                              </button>
+                                          </li>
+                                      </ul>
+                                  `;
+                              } 
+                              else {
+                                return '<td class="view-col"></td>';
+                              }
+                          }
+                        }
+                    ],
+                    order: [],
+                    pageLength: -1
+                });
+
+                tableData.forEach(fileDetails => {
+                  console.log(fileDetails);
+                  if(department !== "Requestor"){
+                    $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
+                      window.open(`${fileDetails.Url}`, '_blank');
+                    });
+                  }
+                  else{
+                    $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
+                      window.open(`${fileDetails.Url}`);
+                    });
+                  }
+                });
+            } else {
+                console.log("No items found.");
             }
-            else{
-              $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                window.open(`https://frcidevtest.sharepoint.com/${fileDetails.ServerRelativeUrl}`);
-              });
-            }
-          });
-        }
-        else {
-          console.log("No items found.");
-        }
-      })
-      .catch(error => {
-        console.error("Error retrieving file details:", error);
-      });
-
+        })
+        .catch(error => {
+            console.error("Error retrieving file details:", error);
+        });
   }
 
   public async checkCurrentUsersGroupAsync() {
@@ -1324,7 +1288,7 @@ thead, tbody tr {
       let folderPath = libraryName + "/" + companyName + "/" + reqId;
       let currentWebUrl = this.context.pageContext.web.absoluteUrl;
       let requestUrl = `${currentWebUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files?$orderby=TimeCreated desc&$expand=Author,ModifiedBy`;
-
+      console.log('RequestURl: ', requestUrl);
       const response = await fetch(requestUrl, {
         method: 'GET',
         headers: {
