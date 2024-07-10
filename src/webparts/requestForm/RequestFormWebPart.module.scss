@@ -270,6 +270,7 @@
     width: 20%!important;
     right: 0;
     background: grey;
+    padding: 0px!important;
   }
 
 
@@ -300,4 +301,8 @@
 
 .legalLegend {
   background: #F1F2F2;
+}
+
+.requiredFieldsLabel {
+  color: red;
 }

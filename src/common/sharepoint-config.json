@@ -49,8 +49,10 @@
         "ManageActionsGroup": "Manage Actions",
         "AdminMain": "GR_ADMIN_MAIN",
         "AdminSub": "GR_ADMIN_SUB",
-        "Despatcher": "ENL_CMS_Despachers",
-        "Requestor": "ENL_CMS_Requestors",
-        "Owner": "ENL_CMS_Owners" 
+        "Despatcher": "LegalLink_Despatchers",
+        "Requestor": "LegalLink_Requestors",
+        "InternalOwner": "LegalLink_Internal_Owners",
+        "ExternalOwner": "LegalLink_External_Owners",
+        "DirectorsView": "LegalLink_Directors_View" 
     }
 }

@@ -42,7 +42,8 @@ require('./../../common/css/style.css');
 require('./../../common/css/common.css');
 require('../../../node_modules/@fortawesome/fontawesome-free/css/all.min.css');
 
-var department;
+let departments = [];
+// var currentRole;
 let currentUser: string;
 
 export interface IRequestFormWebPartProps {
@@ -71,137 +72,147 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     });
   }
 
-  public async checkCurrentUsersGroupAsync() {
-    let groupList = await sp.web.currentUser.groups();
-
-    if (groupList.filter(g => g.Title == sharepointConfig.Groups.Requestor).length == 1) {
-      department = "Requestor";
-      console.log("You are a requestor", department);
-      // $(".legalDept").css("display", "none");
-    }
-    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Owner).length == 1) {
-      department = "Owner";
-      console.log("You are an", department);
-      // $(".legalDept").css("display", "none");
-      // $('#commentSection').hide();
-    }
-    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
-      department = "Despatcher";
-      console.log("You are a", department);
-      // $(".legalDept").css("display", "block");
-    }
-    else {
-      department = "null";
-      console.log("You are not in any group");
-      // $(".legalDept").css("display", "none");
-    }
-  }
-
   //Render everything
   public async render(): Promise<void> {
 
     const absoluteUrl = this.context.pageContext.web.absoluteUrl;
 
-    //HTML CSS of form
+    //CSS
     this.domElement.innerHTML = `
     <style>
-  .main-container {
-    display: flex;
-    height: fit-content;
-    position: relative;
-}
-  .left-panel, .right-panel {
-      position: fixed;
-      transition: width 0.5s ease, margin 0.5s ease;
-      height: 100vh;
+    .main-container {
+      display: flex;
+      height: fit-content;
+      position: relative;
   }
-  .left-panel {
-      width: 13%;
-      left: 0;
-      overflow-x: hidden;
-  }
-  .right-panel {
-      right: 20px;
-  }
-  .middle-panel {
-      flex: 1;
-      width: 87%;
-      margin-left: 13%;
-      transition: width 0.5s ease, margin 0.5s ease;
-  }
+    .left-panel, .right-panel {
+        position: fixed;
+        transition: width 0.5s ease, margin 0.5s ease;
+        height: 100vh;
+    }
+    .left-panel {
+        width: 13%;
+        left: 0;
+        overflow-x: hidden;
+    }
+    .right-panel {
+        right: 20px;
+    }
+    .middle-panel {
+        flex: 1;
+        width: 87%;
+        margin-left: 13%;
+        transition: width 0.5s ease, margin 0.5s ease;
+    }
+  
+    .form-container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        height: 60rem;
+    }
+    .timeline {
+        list-style: none;
+        padding-left: 8px;
+        height: 70%;
+        overflow-y: scroll;
+    }
+  
+    .timeline-item {
+        margin-bottom: 20px;
+    }
+    .comment-box {
+        height: 35%;
+        padding-bottom: 1rem
+    }
+    .comment-input {
+        height: 70%;
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        resize: vertical;
+    }
+  
+    .timeline::-webkit-scrollbar {
+      width: 5px; /* Adjust the width to make the scrollbar thinner */
+    }
+  
+    .timeline::-webkit-scrollbar-thumb {
+      background-color: #888; /* Color of the scrollbar thumb */
+    }
+  
+    .timelineHeader {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 7px 6px -6px #222;
+      border: 2px solid black;
+      margin-bottom: 0.5rem;
+    }
+  
+    fieldset {
+      border: 1px solid #062470;
+      padding: 0rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+  
+    legend {
+      width: auto;
+      margin-bottom: 0;
+      font-size: 1.2rem;
+      color: #062470;
+    }
+  
+    #legalDeptSection{
+      display: none;
+      background-color: rgb(6, 36, 112, 0.1);
+    }
+  
+    .submitBtnDiv {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+    }
 
-  .form-container {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
-      height: 60rem;
-  }
-  .timeline {
-      list-style: none;
-      padding-left: 8px;
-      height: 70%;
-      overflow-y: scroll;
-  }
-
-  .timeline-item {
-      margin-bottom: 20px;
-  }
-  .comment-box {
-      height: 35%;
-      padding-bottom: 1rem
-  }
-  .comment-input {
-      height: 70%;
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
+    .assignBtnDiv {
+      display: flex;
+      justify-content: right;
+    }
+  
+    .toggle-container {
+      display: flex;
       border-radius: 5px;
-      resize: vertical;
-  }
+      overflow: hidden;
+      width: fit-content;
+      border: 1px solid #062470;
+      font-size: medium;
+    }
+    
+    .toggle-container input[type="radio"] {
+      display: none;
+    }
+    
+    .toggle-label {
+      padding: 0px 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-align: center;
+      margin-bottom: 0;
+    }
+    
+    #yourDetails:checked + .toggle-label,
+    #onBehalf:checked + .toggle-label {
+      background-color: rgb(6, 36, 112, 0.1);
+    }
+  
+  </style>
+  
+    `;
 
-  .timeline::-webkit-scrollbar {
-    width: 5px; /* Adjust the width to make the scrollbar thinner */
-  }
-
-  .timeline::-webkit-scrollbar-thumb {
-    background-color: #888; /* Color of the scrollbar thumb */
-  }
-
-  .timelineHeader {
-    text-align: center;
-    padding: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    box-shadow: 0 7px 6px -6px #222;
-    border: 2px solid black;
-    margin-bottom: 0.5rem;
-  }
-
-  fieldset {
-    border: 1px solid #062470;
-    padding: 0rem 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  legend {
-    width: auto;
-    margin-bottom: 0;
-    font-size: 1.2rem;
-    color: #062470;
-  }
-
-  #legalDeptSection{
-    display: none;
-    background-color: rgb(6, 36, 112, 0.1);
-  }
-
-  .submitBtnDiv {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-  }
-
-</style>
+    //HTML
+    this.domElement.innerHTML += `
 
       <div class="main-container" id="content">
 
@@ -221,7 +232,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                 <h2 style="color: #888;">Request Form</h2>
 
                 <fieldset>
-                  <legend>YOUR DETAILS</legend>
+                  <legend id='requestorDetailsLegend'>YOUR DETAILS</legend>
 
                   <div id="yourDetailsSection" class="${styles.grid}">
                     
@@ -241,20 +252,20 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                     <div class="${styles['col-1-3']}">
                       <div class="${styles.controls}">
                         <label for="email">Email*</label>
-                        <input type="text"  id="email">
+                        <input type="text"  id="email" required>
                       </div>
                     </div>
                     <div class="${styles['col-1-3']}">
                       <div class="${styles.controls}">
                         <label for="phone_number">Phone Number*</label>
-                        <input type="text"  id="phone_number">
+                        <input type="text"  id="phone_number" required>
                       </div>
                     </div>
             
                     <div class="${styles['col-1-3']}">
                         <div class="${styles.controls}">
                         <label for="enl_company">Company*</label>
-                        <input type="text"  placeholder="Please select.." id="enl_company" list='companies_folder'/>
+                        <input type="text"  placeholder="Please select.." id="enl_company" list='companies_folder' required/>
                         <datalist id="companies_folder"></datalist>
                       </div>
                     </div>
@@ -404,18 +415,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
                 </fieldset>
 
-                <fieldset id="legalDeptSection">
-                  <legend class="${styles.legalLegend}">FOR LEGAL DEPARTMENT ONLY</legend>
-                </fieldset>
-
-              <br>
-
               <div id="requestorSubmit" class="submitBtnDiv">
-                <button type="button" id="saveToList"><i class="fa fa-refresh icon" style="display: none;"></i>Save</button>
-                <button type="button">Cancel</button>
+                <button type="submit" id="saveToList"><i class="fa fa-refresh icon" style="display: none;"></i>Save</button>
               </div>
 
-              <br>
+              <fieldset id="legalDeptSection">
+                <legend class="${styles.legalLegend}">FOR LEGAL DEPARTMENT ONLY</legend>
+              </fieldset>
 
               <div id="section_review_contract">
                 <div id="tbl_contract" style="margin-top: 1.5em;"></div>
@@ -430,6 +436,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       </div>
     `;
 
+    //#region SPComponent Loader
     SPComponentLoader.loadScript('https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js')
       .then(() => {
         // return SPComponentLoader.loadScript('//cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/cjs/popper.min.js') 
@@ -443,58 +450,52 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       .catch(error => {
         console.error("Error loading scripts: " + error);
       });
+    //#endregion
+    
+    //Retrieve user roles
+    var currentRole = await this.checkCurrentUsersGroupAsync();
+    console.group("User's current role:", currentRole);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const updateRequestID = urlParams.get('requestid');
+    //Generate Side Menu
+    SideMenuUtils.buildSideMenu(absoluteUrl);
 
-    if (!urlParams.has('requestid')) {
+    let nameInput = document.getElementById('requestor_name')  as HTMLInputElement;
+    let emailInput = document.getElementById('email')  as HTMLInputElement;
 
-      this.setRequestorDetails();
+    //Display On Behalf
+    if(currentRole === 'OwnerCreate' || currentRole === 'DespatcherCreate'){
+      document.getElementById('requestorDetailsLegend').innerHTML = `
+        <div class="toggle-container">
+          <input type="radio" id="yourDetails" name="toggle" checked>
+          <label for="yourDetails" class="toggle-label">YOUR DETAILS</label>
+          <input type="radio" id="onBehalf" name="toggle">
+          <label for="onBehalf" class="toggle-label">ON BEHALF</label>
+        </div>
+      `;
 
+      document.getElementById('yourDetails').addEventListener('change', (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+          onBehalf = false;
+          this.setRequestorDetails(onBehalf);
+          nameInput.disabled = true;
+          emailInput.disabled = true;
+        }
+      });
+  
+      document.getElementById('onBehalf').addEventListener('change', (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+          onBehalf = true;
+          this.setRequestorDetails(onBehalf);
+          nameInput.disabled = false;
+          emailInput.disabled = false;
+        }
+      });
     }
 
-    //On Update Request
-    if (updateRequestID) {
-
-      // const middlePanelID = document.getElementById('middle-panel');
-      // middlePanelID.style.marginRight = '27%';
-      // const rightPanelID = document.getElementById('rightPanel');
-      // rightPanelID.style.width = '27%';
-
-      //Generate Timeline
-      // document.getElementById('rightPanel').innerHTML = `
-      // <div style="width: 100%; height:100%; background: white; padding-bottom: 30%;">
-      //   <div class="timelineHeader">
-      //     <p style="margin-bottom: 0px;">Timeline</p>
-      //   </div>
-      //   <ul id="commentTimeline" class="timeline"></ul>
-      //   <div class="comment-box">
-      //     <textarea id="comment" class="comment-input" placeholder="Add your comment..."></textarea>
-      //     <button id="addComment">Add Comment</button>
-      //   </div>
-      // </div>
-      // `;
-
-      this.renderRequestDetails(updateRequestID);
-      document.getElementById('saveToList').textContent = 'Update';
-
-
-      // this.load_comments(updateRequestID);
-    }
-
-    //New Request
-    // else {
-    // $('#rightPanel').hide();
-    // const middlePanelID = document.getElementById('middle-panel');
-    // middlePanelID.style.marginRight = '0%';
-    // middlePanelID.style.width = '83%';
-    // $('#contractStatus').hide();
-    // }
-
-    await this.checkCurrentUsersGroupAsync();
-    var ownerTitle;
-
-    if (department === "Despatcher") {
+    //Display Legal Department
+    if(currentRole === ('DespatcherAssign')){
       $('#legalDeptSection').show();
 
       document.getElementById('legalDeptSection').innerHTML += `
@@ -532,6 +533,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               </div>
             </div>
           </div>
+
+          <div class="assignBtnDiv">
+            <button type="submit" id="saveToList">Assign</button>
+          </div>
+          <br>
         </div>
       `;
 
@@ -546,10 +552,37 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         console.log("LOGG", value2send);
         //  $("#created_by").val(value2send);
       });
-
-
-
     }
+
+    //Display Cancel Button
+    if(currentRole === 'RequestorUpdate' || currentRole === 'DespatcherAssign'){
+      document.getElementById('requestorSubmit').innerHTML += `
+        <button id="cancelRequest" type="button">Cancel</button>
+      `;
+    }
+
+    //Disable Name and Email
+    if(currentRole === 'RequestorCreate' || currentRole === 'OwnerCreate' || currentRole === 'DespatcherCreate'){
+      nameInput.disabled = true;
+      emailInput.disabled = true;
+    }
+
+    //Retrieve Request ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const updateRequestID = urlParams.get('requestid');
+    let onBehalf: boolean = false;
+    //New Request
+    if (!updateRequestID) {
+      this.setRequestorDetails(onBehalf);
+    }
+    //Update Request
+    else {
+      this.renderRequestDetails(updateRequestID);
+
+      document.getElementById('saveToList').textContent = 'Update';
+    }
+
+    var ownerTitle;
 
     //OtherParties datatable
     var table = $('#tbl_other_Parties').DataTable({
@@ -561,55 +594,32 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     $("#authorisedApproverDiv").css("display", "none");
 
     $("#authority_to_approve_contract").change(function (e) {
-
       var $el = $(this);
-
       var value = $el.val();
-
       if (value == 'Yes') {
-
         $("#authorisedApproverDiv").css("display", "block");
-
       } else {
-
         $("#authorisedApproverDiv").css("display", "none");
-
       }
-
     });
-
-    //CSS for labels
-    require('./RequestorForm');
-
-    //Generate Side Menu
-    SideMenuUtils.buildSideMenu(this.context.pageContext.web.absoluteUrl);
 
     this.load_companies(); //Companies list
     this.load_services(); //Request For list
 
     //Display for upload button for file
     $("#requestFor").change(function (e) {
-
       var $el = $(this);
-
       var value = $el.val();
-
       if (value == 'Review of Agreement') {
-
         $("#uploadFile").css("display", "block");
-
       } else {
-
         $("#uploadFile").css("display", "none");
-
       }
-
     });
 
+    //Process uploaded file
     var filename_add;
     var content_add;
-
-    //Process uploaded file
     $('#uploadContract').on('change', () => {
       const input = document.getElementById('uploadContract') as HTMLInputElement | null;
 
@@ -660,175 +670,432 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       }
     });
 
-    var newRequestID;
+    //Permission levels
+    const permissionLevels = {
+      FullControl: 1073741829,
+      Design: 1073741828,
+      Edit: 1073741830,
+      Contribute: 1073741827,
+      Read: 1073741826,
+      LimitedAccess: 1073741825,
+      ViewOnly: 1073741924,
+      ManageHierarchy: 1073741928
+    };
+
+    //ENL CMS GROUP Principal IDs
+    const ENL_CMS_Group_IDs = {
+      LegalLink_Requestors: 49,
+      LegalLink_Despatchers: 46,
+      LegalLink_Internal_Owners: 48,
+      LegalLink_External_Owners: 47,
+      LegalLink_Directors_View: 50
+    };
 
     //Create new request
+    var newRequestID;
     $("#saveToList").click(async (e) => {
 
-      try {
-        if (department == "Despatcher") {
-          var ifConfidential = "NO";
-          // icon_update.classList.remove('hide');
-          // icon_update.classList.add('show');
-          // icon_update.classList.add('spinning');
-          (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
+      this.checkFormIsValid();
 
-          if ($('input[name="checkbox_confidential"]').is(':checked')) {
-            ifConfidential = "YES";
-          }
+      (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
 
-          const despatcher = await sp.web.currentUser();
+      //Other Parties data
+      var dataParties = table.rows().data();
+      var allOtherParties = "";
+      dataParties.each(function (value, index) {
+        allOtherParties += `${value};`;
+      });
 
+      const checkbox = document.getElementById('checkbox_confidential') as HTMLInputElement;
+      const confidentialValue = checkbox.checked ? 'YES' : 'NO';
 
-          var dataDespatch = {
-            AssignedTo: $("#assignedTo").val(),
-            DueDate: $("#due_date").val(),
-            NameOfAgreement: $("#agreement_name").val(),
-            TypeOfContract: $("#contract_type").val(),
-            Confidential: ifConfidential,
-            DespatcherEmail: despatcher.Email,
-            OwnerEmail:  ownerTitle
+      //Form data
+      var formData = {
+        // Title: "Title",
+        NameOfRequestor: $("#requestor_name").val(),
+        Status_Title: $("#status_title").val(),
+        Email: $("#email").val(),
+        Phone_Number: $("#phone_number").val(),
+        Company: $("#enl_company").val(),
+        Department: $("#department").val(),
+        RequestFor: $("#requestFor").val(),
+        Confidential: confidentialValue,
+        BriefDescriptionTransaction: $("#brief_desc").val(),
+        Party1_agreement: $("#party1").val(),
+        Party2_agreement: $("#party2").val(),
+        Others_parties: allOtherParties,
+        ExpectedCommencementDate: $("#expectedCommenceDate").val().toString(),
+        AuthorityApproveContract: $("#authority_to_approve_contract").val(),
+        AuthorisedApprover: $("#authorisedApprover").val()
+        // AssigneeComment: $("#comment").val()
+        // AssignedTo: $("#requestor_name").val(),
+        // DueDate: $("#requestor_name").val(),
+        // TypeOfContract: $("#requestor_name").val(),
+        // NameOfAgreement: $("#requestor_name").val()
+      };
+
+      console.log(formData);
+
+      if(currentRole === 'RequestorCreate' || currentRole === 'OwnerCreate' || currentRole === 'DespatcherCreate'){
+        try {
+          //Add item to Contract Request
+          const iar = await sp.web.lists.getByTitle("Contract_Request").items.add(formData)
+            .then((iar) => {
+              newRequestID = iar.data.ID;
+            });
+          console.log(newRequestID);
+
+          var dataC = {
+            Request_ID: newRequestID.toString()
           };
+          console.log(dataC);
 
-          await this.assignOwners(parseInt(updateRequestID), dataDespatch);
-
-          // icon_update.classList.remove('spinning', 'show');
-          // icon_update.classList.add('hide');
-
-
-          (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
-          Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Dashboard.aspx`, true);
-        }
-        else {
-
-
-          // icon_add.classList.remove('hide');
-          // icon_add.classList.add('show');
-          // icon_add.classList.add('spinning');
-
-          (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
-
-          //Other Parties data
-          var dataParties = table.rows().data();
-          var allOtherParties = "";
-          dataParties.each(function (value, index) {
-            allOtherParties += `${value};`;
-          });
-
-          //Form data
-          var data = {
-            // Title: "Title",
-            NameOfRequestor: $("#requestor_name").val(),
-            Status_Title: $("#status_title").val(),
-            Email: $("#email").val(),
-            Phone_Number: $("#phone_number").val(),
-            Company: $("#enl_company").val(),
-            Department: $("#department").val(),
-            RequestFor: $("#requestFor").val(),
-            BriefDescriptionTransaction: $("#brief_desc").val(),
-            Party1_agreement: $("#party1").val(),
-            Party2_agreement: $("#party2").val(),
-            Others_parties: allOtherParties,
-            ExpectedCommencementDate: $("#expectedCommenceDate").val().toString(),
-            AuthorityApproveContract: $("#authority_to_approve_contract").val(),
-            AuthorisedApprover: $("#authorisedApprover").val(),
-            Confidential: $("#checkbox_confidential").val()
-            // AssigneeComment: $("#comment").val()
-            // AssignedTo: $("#requestor_name").val(),
-            // DueDate: $("#requestor_name").val(),
-            // TypeOfContract: $("#requestor_name").val(),
-            // NameOfAgreement: $("#requestor_name").val()
-          };
-
+          //Add item to Contract Details
           try {
-            const iar = await sp.web.lists.getByTitle("Contract_Request").items.add(data)
-              .then((iar) => {
-                newRequestID = iar.data.ID;
-              });
-            console.log(newRequestID);
-
-            var dataC = {
-              Request_ID: newRequestID.toString()
-            };
-
-            console.log(dataC);
-            try {
-              await sp.web.lists.getByTitle("Contract_Details").items.add(dataC);
-            }
-            catch (error) {
-              console.error('Error adding item in contract_Details:', error);
-              throw error;
-            }
+            await sp.web.lists.getByTitle("Contract_Details").items.add(dataC);
           }
           catch (error) {
-            console.error('Error adding item:', error);
+            console.error('Error adding item in contract_Details:', error);
             throw error;
           }
 
           //Root Document library
-          const library = "Contracts_ToReview";
-          //Final path in which document will be stored
-          const folderPath = `/sites/ContractMgt/Contracts_ToReview/${$("#enl_company").val()}/${newRequestID}`;
-          console.log("Test 1");
-          if ($("#requestFor").val() == 'Review of Agreement') {
-            await this.addFolderToDocumentLibrary(library, $("#enl_company").val(), newRequestID.toString())
-              .then(async () => {
-                try {
-                  await this.addFileToFolder2(folderPath, filename_add, content_add, newRequestID.toString());
-                }
-                catch (e) {
-                  console.log(e.message);
-                }
-              });
-          }
+          // const libraryTitle = "Contracts";
+          // const library = sp.web.lists.getByTitle(libraryTitle);
+          // const companyFolderName = $("#enl_company").val() as string;
+          // const contractFolderName = newRequestID;
+          // //Final path in which document will be stored
+          // const folderPath = `/sites/ContractMgt/Contracts/${companyFolderName}/${contractFolderName}`;
+
+          // //Create contract folder
+          // await library.rootFolder.folders.getByName(companyFolderName).folders.add(newRequestID);
+          // console.log(`Contract Folder '${contractFolderName}' created successfully.`);
+
+
+
+
+
+          // if ($("#requestFor").val() == 'Review of Agreement') {
+          //   await this.addFolderToDocumentLibrary(library, $("#enl_company").val(), newRequestID.toString())
+          //     .then(async () => {
+          //       try {
+          //         await this.addFileToFolder2(folderPath, filename_add, content_add, newRequestID.toString());
+          //       }
+          //       catch (e) {
+          //         console.log(e.message);
+          //       }
+          //     });
+          // }
 
           alert(`Request ${newRequestID} has been submitted successfully.`);
 
-          // icon_add.classList.remove('spinning', 'show');
-          // icon_add.classList.add('hide');
-
-          (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
-
-          Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Dashboard.aspx`, true);
+          // if(currentRole === 'DespatcherCreate'){
+          //   Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Requestor-Form.aspx?requestid=${newRequestID}`, true);
+          // }
+          // else{
+          //   Navigation.navigate(`${this.context.pageContext.web.absoluteUrl}/SitePages/Dashboard.aspx`, true);
+          // }
+        }
+        catch (error) {
+          console.error('Error adding item:', error);
+          throw error;
         }
       }
-      catch (e) {
-
-        console.log("ERROR", e.message);
-      }
-
     });
 
-    //Add comment button
-    // $("#addComment").click(async (e) => {
-    //   console.log("Test New Comment");
-    //   // icon_add_comment.classList.remove('hide');
-    //   // icon_add_comment.classList.add('show');
-    //   // icon_add_comment.classList.add('spinning');
+    //Retrieve requestDigest
+    var requestDigest;
+    await this.getFormDigest(absoluteUrl).then(function (data) {
+      requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+    });
 
-    //   const currentUser = await sp.web.currentUser();
+    //Retrieve Email of current user
+    var currentUserEmail;
+    await this.getCurrentUserEmail(absoluteUrl)
+    .then(response => {
+        currentUserEmail = response.d.Email;
+    })
+    .catch(error => {
+        console.error('Error retrieving current user email:', error);
+    });
 
-    //   const data = {
+    currentUserEmail = 'samg@frcidevtest.onmicrosoft.com'
 
-    //     Title: updateRequestID,
-    //     RequestID: updateRequestID,
-    //     Comment: $("#comment").val(),
-    //     CommentBy: currentUser.UserPrincipalName,
-    //     CommentDate: moment().format("DD/MM/YYYY HH:mm")
-    //   };
+    //Retrieve PrincipalId for currrent user
+    var principalIdUser;
+    await this.getPrincipalIdForUserByEmail(absoluteUrl, currentUserEmail)
+      .then(principalId => {
+          principalIdUser = principalId;
+      })
+      .catch(error => {
+          console.error('Error fetching PrincipalId:', error);
+      });
 
-    //   console.log(data);
 
-    //   await this.addComment(data);
+    const caseFolderPath = "/sites/ContractMgt/Contracts/FRCI/194";
 
-    //   // icon_add_comment.classList.remove('spinning', 'show');
-    //   // icon_add_comment.classList.add('hide');
+    this.consoleFolderUsers(absoluteUrl, caseFolderPath);
 
-    //   this.load_comments(updateRequestID);
+    //Assign Permissions
+    try {
 
-    //   $("#comment").val("");
+      //Break role inheritance
+      await this.breakRoleInheritance(absoluteUrl, requestDigest, caseFolderPath);
+      console.log("Inheritance broken");
+  
+      const response = await this.getFolderPermissions(absoluteUrl, caseFolderPath);
+      const roleAssignments = response.d.results;
+      console.log(roleAssignments);
+      //Listing Folder Permissions
+      const users = roleAssignments
+        .filter(roleAssignment => roleAssignment.Member.PrincipalType === 1 || 8)
+        .map(roleAssignment => roleAssignment.Member.Title);
+      console.log('Users with access to the folder:', users);
 
-    // });
+      //Remove all existing role assignments
+      for (let roleAssignment of roleAssignments) {
+        await this.removeRoleAssignments(absoluteUrl, requestDigest, caseFolderPath, roleAssignment.PrincipalId);
+      }
+      console.log("All role assignments removed");
+
+      //Add permission per user
+      this.addRoleAssignmentUser(absoluteUrl, requestDigest, caseFolderPath, principalIdUser, permissionLevels.Edit);
+  
+      //Add ENL_CMS_Despachers group with appropriate permissions
+      const ENL_CMS_Despachers_principalId = 14;
+      const roleDefId = 1073741827;
+      await this.addRoleAssignment(absoluteUrl, requestDigest, caseFolderPath, ENL_CMS_Despachers_principalId, roleDefId);
+      console.log("ENL_CMS_Despachers group added with permissions");
+
+      const response2 = await this.getFolderPermissions(absoluteUrl, caseFolderPath);
+      const roleAssignments2 = response2.d.results;
+      //Listing Folder Permissions
+      const users2 = roleAssignments2
+        .filter(roleAssignments2 => roleAssignments2.Member.PrincipalType === 1 || 8)
+        .map(roleAssignments2 => roleAssignments2.Member.Title);
+      console.log('Users with access to the folder2:', users2);
+  
+    } catch (error) {
+      console.error("Error updating folder permissions:", error);
+    }
+
+  }
+
+  //RequestDigest
+  private getFormDigest(absoluteUrl) {
+    return $.ajax({
+        url: absoluteUrl + "/_api/contextinfo",
+        method: "POST",
+        headers: {
+            "Accept": "application/json; odata=verbose"
+        }
+    });
+  }
+
+  //Retrieve Current User Email
+  private getCurrentUserEmail(absoluteUrl) {
+    const restUrl = `${absoluteUrl}/_api/web/currentUser?$select=Email`;
+
+    return $.ajax({
+        url: restUrl,
+        method: "GET",
+        headers: {
+            "Accept": "application/json; odata=verbose"
+        }
+    });
+  }
+
+  //Retrieve principalId of user using email address
+  private getPrincipalIdForUserByEmail(absoluteUrl, currentUserEmail) {
+    const restUrl = `${absoluteUrl}/_api/web/SiteUserInfoList/items?$filter=EMail eq '${encodeURIComponent(currentUserEmail)}'`;
+
+    return $.ajax({
+        url: restUrl,
+        method: "GET",
+        headers: {
+            "Accept": "application/json; odata=verbose"
+        }
+    }).then(response => {
+        if (response.d && response.d.results && response.d.results.length > 0) {
+            return response.d.results[0].ID; // PrincipalId is typically found in the ID field
+        } else {
+            throw new Error(`User with email ${currentUserEmail} not found.`);
+        }
+    });
+  }
+
+  //Display current users on folder on console
+  private async consoleFolderUsers(absoluteUrl, caseFolderPath) {
+    const response = await this.getFolderPermissions(absoluteUrl, caseFolderPath);
+      const roleAssignments = response.d.results;
+      console.log(roleAssignments);
+      //Listing Folder Permissions
+      const users = roleAssignments
+        .filter(roleAssignment => roleAssignment.Member.PrincipalType === 1 || 8)
+        .map(roleAssignment => roleAssignment.Member.Title);
+      console.log('Users with access to the folder:', users);
+  }
+
+  //Adding Role Assignment for User
+  private async addRoleAssignmentUser(absoluteUrl, requestDigest, folderUrl, principalId, roleDefId) {
+    try {
+        // Step 1: Break role inheritance (optional if already broken)
+        await this.breakRoleInheritance(absoluteUrl, requestDigest, folderUrl);
+
+        // Step 2: Add role assignment for the specified user
+        const restUrl = `${absoluteUrl}/_api/web/getFolderByServerRelativeUrl('${folderUrl}')/ListItemAllFields/RoleAssignments/addroleassignment(principalid=${principalId}, roledefid=${roleDefId})`;
+        
+        await $.ajax({
+            url: restUrl,
+            method: "POST",
+            headers: {
+                "Accept": "application/json; odata=verbose",
+                "X-RequestDigest": requestDigest
+            }
+        });
+
+        console.log(`Role assigned to user with Principal ID ${principalId}`);
+    } catch (error) {
+        console.error('Error adding role assignment:', error);
+        throw error;
+    }
+  }
+
+  //Retrieve folder user and group access
+  private getFolderPermissions(absoluteUrl, folderUrl) {
+    const restUrl = `${absoluteUrl}/_api/web/getFolderByServerRelativeUrl('${folderUrl}')/ListItemAllFields/RoleAssignments?$expand=Member,Member/Users,Member/Owner,RoleDefinitionBindings`;
+    console.log(restUrl);
+  
+    return $.ajax({
+      url: restUrl,
+      method: "GET",
+      headers: {
+        "Accept": "application/json; odata=verbose"
+      }
+    });
+  }
+
+  //Break Permissions
+  private breakRoleInheritance(absoluteUrl, requestDigest, folderUrl) {
+    const restUrl = `${absoluteUrl}/_api/web/getFolderByServerRelativeUrl('${folderUrl}')/ListItemAllFields/breakroleinheritance(copyRoleAssignments=false)`;
+
+    return $.ajax({
+      url: restUrl,
+      method: "POST",
+      headers: {
+        "Accept": "application/json; odata=verbose",
+        "X-RequestDigest": requestDigest
+      }
+    });
+  }
+
+  private removeRoleAssignments(absoluteUrl, requestDigest, folderUrl, roleAssignmentId) {
+    const restUrl = `${absoluteUrl}/_api/web/getFolderByServerRelativeUrl('${folderUrl}')/ListItemAllFields/roleassignments/removeroleassignment(principalid=${roleAssignmentId})`;
+    return $.ajax({
+      url: restUrl,
+      method: "POST",
+      headers: {
+        "Accept": "application/json; odata=verbose",
+        "X-RequestDigest": requestDigest
+      }
+    });
+  }
+  
+  private addRoleAssignment(absoluteUrl, requestDigest, folderUrl, principalId, roleDefId) {
+    const restUrl = `${absoluteUrl}/_api/web/getFolderByServerRelativeUrl('${folderUrl}')/ListItemAllFields/roleassignments/addroleassignment(principalid=${principalId}, roledefid=${roleDefId})`;
+    return $.ajax({
+      url: restUrl,
+      method: "POST",
+      headers: {
+        "Accept": "application/json; odata=verbose",
+        "X-RequestDigest": requestDigest
+      }
+    });
+  }
+
+  //Check Form Validity
+  private checkFormIsValid(){
+    document.getElementById("requestor_form").addEventListener("submit", function(event) {
+      event.preventDefault(); // Prevent the default form submission
+    
+      const form = event.target as HTMLFormElement;
+    
+      if (form.checkValidity() === false) {
+        event.stopPropagation();
+        form.classList.add("was-validated");
+      } else {
+        console.log('Form is valid');
+      }
+    });
+  }
+
+  public async checkCurrentUsersGroupAsync() {
+    var currentRole;
+    let groupList = await sp.web.currentUser.groups();
+    console.log('grouplist: ', groupList);
+  
+    const urlParams = new URLSearchParams(window.location.search);
+    const updateRequestID = urlParams.get('requestid');
+    
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.Requestor).length == 1) {
+      departments.push("Requestor");
+    }
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.InternalOwner).length == 1) {
+      departments.push("InternalOwner");
+    }
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.ExternalOwner).length == 1) {
+      departments.push("ExternalOwner");
+    }
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
+      departments.push("Despatcher");
+    }
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.DirectorsView).length == 1) {
+      departments.push("DirectorsView");
+    }
+
+    console.log(departments);
+
+    if (departments.length === 0) {
+      departments.push("noGroup");
+    }
+    else if(departments.length === 1) {
+      if (departments.includes('Requestor')) {
+        if (!updateRequestID){
+          return currentRole = 'RequestorCreate'; //New Request
+        }
+        else{
+          return currentRole = 'RequestorUpdate'; //Update Request
+        }
+      }
+      else if (departments.includes('ExternalOwner')) {
+        return currentRole = 'ExternalOwnerOnly' //External Owner Only -> Disable Submit Button
+      }
+    }
+    else if(departments.length === 2){
+      if (departments.includes('Requestor') && (departments.includes('InternalOwner') || departments.includes('ExternalOwner') || (departments.includes('DirectorsView')))) {
+        if (!updateRequestID){
+          if(departments.includes('DirectorsView')){
+            return currentRole = 'RequestorCreate'; //New Request by Director's View
+          }
+          else{
+            return currentRole = 'OwnerCreate'; //New Request by Internal Owner or External Owner on behalf of requestor or for themselves
+          }
+        }
+        else {
+          return currentRole = 'OwnerView'; //Internal Owner or External Owner
+        }
+      }
+    }
+    else if(departments.length === 3){
+      if (departments.includes('Requestor') && departments.includes('InternalOwner') && departments.includes('Despatcher')){
+        if (!updateRequestID){
+          return currentRole = 'DespatcherCreate'; //New Request by despatcher on behalf of requestor
+        }
+        else{
+          return currentRole = 'DespatcherAssign'; //Despatcher edit and assign
+        }
+      }
+    }
   }
 
   //New row for other parties
@@ -866,16 +1133,26 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     }));
   }
 
-  public async setRequestorDetails() {
-
+  // Function to set requestor details
+  public async setRequestorDetails(onBehalf: boolean) {
     const requestor = await sp.web.currentUser();
-
     console.log("req:", requestor);
 
-    $("#requestor_name").val(requestor.Title);
-    $("#email").val(requestor.Email);
+    const fields = [
+      { id: "#requestor_name", value: requestor.Title },
+      { id: "#email", value: requestor.Email },
+      // Add more fields as needed
+    ];
 
+    fields.forEach(field => {
+      if (!onBehalf) {
+        $(field.id).val(field.value);
+      } else {
+        $(field.id).val('');
+      }
+    });
   }
+
 
   async addFolderToDocumentLibrary(libraryTitle, companyFolderName, contractFolderName) {
     const library = sp.web.lists.getByTitle(libraryTitle);
@@ -1111,7 +1388,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
                       $("#section_review_contract").css("display", "block");
 
-                      this.getFileDetailsByFilter('Contracts_ToReview', id)
+                      this.getFileDetailsByFilter('Contracts', id)
                         .then((fileDetails) => {
                           if (fileDetails) {
                             console.log("File URL:", fileDetails.fileUrl);

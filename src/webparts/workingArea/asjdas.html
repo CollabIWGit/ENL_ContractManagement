@@ -3,156 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contract Management</title>
+    <title>Toggle On Behalf</title>
     <style>
-        body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f5f5f5;
+        /* styles.css */
+        .toggle-container {
+  display: flex;
+  border-radius: 5px;
+  overflow: hidden;
+  width: fit-content;
+  border: 1px solid #ccc;
 }
 
-.container {
-    display: flex;
-    height: 100vh;
+.toggle-container input[type="radio"] {
+  display: none;
 }
 
-.panel {
-    padding: 20px;
-    box-sizing: border-box;
+.toggle-label {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  width: 100px;
 }
 
-.left-panel, .right-panel {
-    flex: 1;
-    background-color: #e0e0e0;
+#one-way:checked + .toggle-label {
+  background-color: #f0f0f0;
 }
 
-.middle-panel {
-    flex: 3;
-    width: 60%;
-    background-color: #ffffff;
-    border-left: 1px solid #ccc;
-    border-right: 1px solid #ccc;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+#return:checked + .toggle-label {
+  background-color: #ccc;
 }
 
-header {
-    padding: 20px;
-    background-color: #007BFF;
-    color: #ffffff;
-    text-align: center;
-}
-
-.contract-details {
-    padding: 20px;
-}
-
-fieldset {
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 4px;
-}
-
-legend {
-    padding: 0 10px;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.contract-versions {
-    padding: 20px;
-}
-
-.contract-versions table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.contract-versions th, .contract-versions td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-.contract-versions th {
-    background-color: #f1f1f1;
-}
-
-.buttons {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    background-color: #f9f9f9;
-}
-
-.buttons button {
-    padding: 10px 20px;
-    margin: 0 10px;
-    font-size: 16
-}
-    </style>
+    </style>>
 </head>
 <body>
-    <div class="container">
-        <div class="panel left-panel"></div>
-        <div class="panel middle-panel">
-            <header>
-                <h1>Contract Management</h1>
-            </header>
-            <section class="contract-details">
-                <fieldset>
-                    <legend>Contract Details</legend>
-                    <div class="details-grid">
-                        <div><strong>Case ID:</strong> <span id="case-id">12345</span></div>
-                        <div><strong>Name:</strong> <span id="name">John Doe</span></div>
-                        <div><strong>Company:</strong> <span id="company">Acme Corp</span></div>
-                        <div><strong>Requestor:</strong> <span id="requestor">Jane Smith</span></div>
-                        <div><strong>Owner:</strong> <span id="owner">John Doe</span></div>
-                        <div><strong>Status:</strong> <span id="status">Pending</span></div>
-                    </div>
-                </fieldset>
-            </section>
-            <section class="contract-versions">
-                <h2>Document Versions</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Version</th>
-                            <th>Date</th>
-                            <th>Changes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1.0</td>
-                            <td>2024-01-01</td>
-                            <td>Initial draft</td>
-                        </tr>
-                        <tr>
-                            <td>1.1</td>
-                            <td>2024-02-15</td>
-                            <td>Minor revisions</td>
-                        </tr>
-                        <!-- Add more rows as needed -->
-                    </tbody>
-                </table>
-            </section>
-            <div class="buttons">
-                <button id="new-button">New</button>
-                <button id="existing-button">Existing</button>
-                <button id="upload-button">Upload</button>
-            </div>
-        </div>
-        <div class="panel right-panel"></div>
-    </div>
+    <div class="toggle-container">
+        <input type="radio" id="one-way" name="toggle" checked>
+        <label for="one-way" class="toggle-label">One-way</label>
+        <input type="radio" id="return" name="toggle">
+        <label for="return" class="toggle-label">Return</label>
+      </div>
 </body>
 </html>

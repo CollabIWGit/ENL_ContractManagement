@@ -528,8 +528,9 @@ legend {
         Title: requestID,
         RequestID: requestID,
         Comment: $("#comment").val(),
-        CommentBy: currentUser.UserPrincipalName,
+        CommentBy: currentUser.UserPrincipalName, // Use Email
         CommentDate: moment().format("DD/MM/YYYY HH:mm"),
+        //CommentTo
         Role: role
       };
 
@@ -1119,7 +1120,7 @@ legend {
                         LastModifiedAt: formattedTimeLastModified || 'N/A',
                         UploadedBy: fileItem.Author?.Title || 'N/A',
                         UniqueId: fileItem.UniqueId,
-                        Url: `ms-word:ofv|u|https://frcidevtest.sharepoint.com${fileItem.ServerRelativeUrl}`,
+                        Url: `https://frcidevtest.sharepoint.com${fileItem.ServerRelativeUrl}`,
                         department
                     };
                 });
@@ -1137,7 +1138,7 @@ legend {
                               if (row.department !== "Requestor" || !requestorFlag) {
                                   requestorFlag = true;
                                   return `
-                                      <ul class="list-inline m-0">
+                                      <ul class="list-inline m-0" style="display: grid; align-items: center;">
                                           <li class="list-inline-item">
                                               <button id="btn_view_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="tooltip" data-placement="top" title="View" style="display: none;">
                                                   <i class="fas fa-eye"></i>
@@ -1165,7 +1166,7 @@ legend {
                   console.log(fileDetails);
                   if(department !== "Requestor"){
                     $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                      window.open(`${fileDetails.Url}`, '_blank');
+                      window.open(`ms-word:ofv|u|${fileDetails.Url}`, '_blank');
                     });
                   }
                   else{
@@ -1191,7 +1192,7 @@ legend {
       console.log("You are a requestor", department);
       // $(".legalDept").css("display", "none");
     }
-    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Owner).length == 1) {
+    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.InternalOwner).length == 1) {
       department = "Owner";
       console.log("You are an", department);
       // $(".legalDept").css("display", "none");
