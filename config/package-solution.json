@@ -32,6 +32,12 @@
         "id": "45d91167-951a-4eba-8416-e4d758d225ad",
         "version": "1.0.0.0"
       }
+    ],
+    "webApiPermissionRequests": [
+      {
+        "resource": "Adobe Sign SPFx Proxy",
+        "scope": "user_impersonation"
+      }
     ]
   },
   "paths": {

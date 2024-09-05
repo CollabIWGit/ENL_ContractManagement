@@ -21,6 +21,10 @@
     margin: 0 !important;
     padding: 0 !important;
   }
+
+  [data-automation-id="CanvasZone"] {
+    display: none;
+  }
 }
 
 .requestForm {
@@ -271,6 +275,10 @@
     right: 0;
     background: grey;
     padding: 0px!important;
+  
+    &.dropdownPadding {
+      padding-left: 8px !important;
+    }
   }
 
 
@@ -305,4 +313,110 @@
 
 .requiredFieldsLabel {
   color: red;
+}
+
+.was-validated .is-invalid {
+  border-color: #dc3545;
+}
+
+.was-validated .is-invalid:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.was-validated .is-valid {
+  border-color: #28a745;
+}
+
+.was-validated .is-valid:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.errorSpan {
+  color: red;
+  display: none;
+  margin-left: 5px;
+}
+
+.contributorEntryContainer {
+  overflow-y: scroll;
+  height: 4.9375rem;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  padding: 5px;
+  background-color: #fff;
+  border-top: #fff;
+}
+
+.contributorEntry {
+  margin-right: 10px;
+  margin-bottom: 5px;
+  width: fit-content;
+  display: flex;
+}
+
+.contributorEmail {
+  width: fit-content;
+}
+
+.removeButton {
+  padding: 0 !important;
+  height: 100% !important;
+  border: none !important;
+  // width: 10% !important;
+  margin-bottom: 0px !important;
+  border-radius: 2px !important;
+  float: none !important;
+  background: none !important;
+}
+
+.emailPermissionContainer {
+  display: flex;
+  align-items: center;
+  border: 2px solid #673AB7;
+  border-radius: 30px;
+  padding: 5px 10px;
+  background-color: #ede7f6;
+  margin-bottom: 10px;
+  width: fit-content;
+  margin-right: 10px;
+}
+
+.emailPermission {
+  // flex: 1;
+  // margin-right: 10px;
+  white-space: nowrap;
+  // overflow: hidden;
+  // text-overflow: ellipsis;
+}
+
+.removePermission {
+  background-color: transparent !important;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 0px !important;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+// .removePermission :hover {
+//   background-color: none !important;
+// }
+
+.permissionContainer {
+  display: flex;
 }

@@ -33,6 +33,14 @@
           "manifest": "./src/webparts/workingArea/WorkingAreaWebPart.manifest.json"
         }
       ]
+    },
+    "signatories-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/signatories/SignatoriesWebPart.js",
+          "manifest": "./src/webparts/signatories/SignatoriesWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -40,6 +48,7 @@
     "EnlCmsWebPartStrings": "lib/webparts/enlCms/loc/{locale}.js",
     "RequestFormWebPartStrings": "lib/webparts/requestForm/loc/{locale}.js",
     "ContractFormWebPartStrings": "lib/webparts/contractForm/loc/{locale}.js",
-    "WorkingAreaWebPartStrings": "lib/webparts/workingArea/loc/{locale}.js"
+    "WorkingAreaWebPartStrings": "lib/webparts/workingArea/loc/{locale}.js",
+    "SignatoriesWebPartStrings": "lib/webparts/signatories/loc/{locale}.js"
   }
 }

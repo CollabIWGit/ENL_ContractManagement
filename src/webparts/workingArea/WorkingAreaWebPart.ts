@@ -48,7 +48,11 @@ require('./../../common/css/common.css');
 require('../../../node_modules/@fortawesome/fontawesome-free/css/all.min.css');
 
 let currentUser: string;
-var department;
+// var department;
+var tableDataLength = '';
+let departments = [];
+let absoluteUrl = '';
+let baseUrl = '';
 
 export interface IWorkingAreaWebPartProps {
   description: string;
@@ -79,13 +83,34 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     //Retrieve request id
     const urlParams = new URLSearchParams(window.location.search);
     const requestID = urlParams.get('requestid');
-    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner").filter(`ID eq ${requestID}`).get();
+    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Party2_agreement","OwnerEmail","Email","ContractStatus").filter(`ID eq ${requestID}`).get();
     const NameOfAgreement = contractDetails[0].NameOfAgreement;
     const companyName = contractDetails[0].Company;
     const NameOfRequestor = contractDetails[0].NameOfRequestor;
+    const RequestorEmail = contractDetails[0].Email;
     const Owner = contractDetails[0].Owner;
+    const OwnerEmail = contractDetails[0].OwnerEmail;
+    const typeOfAgreement = contractDetails[0].TypeOfContract;
+    const party2 = contractDetails[0].Party2_agreement;
+    const contractStatus = contractDetails[0].ContractStatus;
+    console.log(contractDetails);
 
-    const absoluteUrl = this.context.pageContext.web.absoluteUrl;
+    var typeOfContract_Acronym = ''
+    const contractType = await sp.web.lists.getByTitle('Type of contracts')
+      .items.filter(`Title eq '${typeOfAgreement}'`)
+      .select('Identifier')
+      .get();
+    console.log(contractType);
+
+    typeOfContract_Acronym = contractType[0].Identifier;
+
+    // Get the current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().split('T')[0];
+    console.log(currentDate);
+    const generalFileName = `${currentDate}_${companyName}_${requestID}_${typeOfContract_Acronym}_${party2}`;
+
+    absoluteUrl = this.context.pageContext.web.absoluteUrl;
+    baseUrl = absoluteUrl.split('/sites')[0];
 
     await this.checkCurrentUsersGroupAsync();
     
@@ -378,9 +403,9 @@ legend {
   
             <button id="minimizeButton"></button>
 
-            <p id="contractStatus" style="color: green; font-size: x-large; position: absolute; top: 0; right: 0; margin: 0.5% 2%;">In Progress</p>
+            <p id="contractStatus" style="color: green; font-size: x-large; position: absolute; top: 0; right: 0; margin: 0.5% 2%;"></p>
 
-            <h2 style="margin-top: 0.7rem; margin-left: 2rem; margin-bottom: 0;">Working Area</h2>
+            <h2 style="margin-top: 0.7rem; margin-left: 2rem; color: #888; margin-bottom: 0;">Working Area</h2>
 
             <section class="contract-details">
               <fieldset class="${styles.contractDetailsFS}">
@@ -428,7 +453,13 @@ legend {
               <ul id="commentTimeline" class="timeline"></ul>
               <div class="comment-box">
                 <textarea id="comment" class="comment-input" placeholder="Add your comment..."></textarea>
-                <button id="addComment">Add Comment</button>
+                <div style="display: flex;">
+                  <button id="addComment">Add Comment</button>
+                  <label for="notifyAll" class="form-check-label" style="font-family: Poppins, Arial, sans-serif; display: flex; align-items: center;">
+                    <input type="checkbox" id="notifyAll" name="notifyAll" style="transform: scale(1.9); margin-left: 1rem; margin-right: 0.5rem; accent-color: #f07e12;" value="YES">
+                    Notify All
+                  </label>
+                <div>
               </div>
             </div>
           </div>
@@ -436,26 +467,42 @@ legend {
         </div>
     `;
 
+    if(requestID){
+      document.getElementById('contractStatus').innerText = `${contractStatus}`;
+    }
+
     $('#tbl_contract').show();
 
     //Display buttons for working area
-    if(department !== "Requestor"){
+    if(departments.includes('Despatcher') || departments.includes('InternalOwner')){
       document.getElementById('workingAreaSubmit').innerHTML = `
-        <button type="button" class="file-input" id="newContractFile"><i class="fa fa-refresh icon" style="display: none;"></i>New Document</button>
         <button type="button" class="file-input" id="useContractTemplate"><i id="useTemplateLoader" class="fa fa-refresh icon" style="display: none;"></i>Use Existing Files</button>
         <button type="button" class="file-input" id="uploadFile">Upload File</button>
         <input type="file" id="uploadContract" style="display: none">
+        <button type="button" class="file-input" id="newContractVersion"><i class="fa fa-refresh icon" style="display: none;"></i>New Version</button>
       `;
+      // <button type="button" id="approvedByRequestor" style="border-radius: 5px;">Approve as Final Version</button>
     }
-    else {
+    else if(departments.includes('Requestor')){
       document.getElementById('workingAreaSubmit').innerHTML = `
         <button type="button" class="file-input" id="uploadFile">Upload File</button>
         <input type="file" id="uploadContract" style="display: none">
       `;
     }
 
+    //Disable if cancelled
+    if(contractStatus === 'Cancelled'){
+      const formElements = this.domElement.querySelectorAll('input, select, textarea, button');
+      formElements.forEach(element => {
+        if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || 
+          element instanceof HTMLTextAreaElement || element instanceof HTMLButtonElement) {
+          element.disabled = true;
+        }
+      });
+    }
+
     //Generate Side Menu
-    SideMenuUtils.buildSideMenu(this.context.pageContext.web.absoluteUrl);
+    SideMenuUtils.buildSideMenu(absoluteUrl, departments);
 
     this.renderRequestDetails(requestID, companyName);
     this.load_comments(requestID);
@@ -500,7 +547,7 @@ legend {
         minimizeButton.style.right = 'calc(26% + 22px)';
       }
     });
-    
+
     //Add comment button
     $("#addComment").click(async (e) => {
       console.log("Test New Comment");
@@ -510,27 +557,33 @@ legend {
 
       const currentUser = await sp.web.currentUser();
       let role;
+      let commentToUser = '';
+      let CommentByName = '';
 
-      if (department === "Requestor") {
-
-        role = "Requestor";
-
-      }
-      else if (department === "Owner") {
+      if (departments.includes('Despatcher') || departments.includes('InternalOwner')) {
         role = "Owner";
+        commentToUser = RequestorEmail;
+        CommentByName = NameOfRequestor;
       }
-      else {
-        role = "Despatcher";
+      else if (departments.includes('Requestor')){
+        role = "Requestor";
+        commentToUser = OwnerEmail;
+        CommentByName = Owner;
       }
+
+      const checkboxNotifyAll = document.getElementById('notifyAll') as HTMLInputElement;
+      const notifyAll = checkboxNotifyAll.checked ? 'YES' : 'NO';
 
       const data = {
-
         Title: requestID,
         RequestID: requestID,
         Comment: $("#comment").val(),
         CommentBy: currentUser.UserPrincipalName, // Use Email
+        CommentByName: CommentByName,
         CommentDate: moment().format("DD/MM/YYYY HH:mm"),
-        //CommentTo
+        CommentTo: commentToUser,
+        NameOfAgreement: NameOfAgreement,
+        NotifyAll: notifyAll,
         Role: role
       };
 
@@ -551,7 +604,12 @@ legend {
     $('#uploadContract').on('change', async () => {
       const input = document.getElementById('uploadContract') as HTMLInputElement | null;
 
-      var filename_add;
+      const libraryTitle = "Contracts";
+      const library = sp.web.lists.getByTitle(libraryTitle);
+
+      const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+      const files = await folder.files();
+
       var content_add;
 
       var file = input.files[0];
@@ -560,70 +618,234 @@ legend {
       reader.onload = ((file1) => {
         return (e) => {
           console.log(file1.name);
-
-          filename_add = file1.name,
-            content_add = e.target.result;
-
+          content_add = e.target.result;
         };
       })(file);
 
       reader.readAsArrayBuffer(file);
 
-      const library = "Contracts_ToReview";
-      const folderPath = `/sites/ContractMgt/Contracts_ToReview/${companyName}/${requestID}`;
+      var nextVersion;
+      var filename = '';
 
-      await this.addFolderToDocumentLibrary(library, companyName, requestID)
-        .then(async () => {
+      let notRequestor = true;
+
+      if(departments.includes('Requestor') && departments.length === 1){
+        const latestFile = getLatestVersionFileRequestor(files);
+        nextVersion = latestFile ? getNextVersionRequestor(latestFile.Name) : 1;
+        filename = `${generalFileName}_Requestor_V${nextVersion}.docx`;
+      }
+      else{
+        const filenameInput = await prompt("Enter the filename:");
+        if(filenameInput && filenameInput.trim() !== ''){
+          const latestFile = getLatestVersionFile(files);
+          nextVersion = latestFile ? getNextVersion(latestFile.Name) : 1;
+          filename = `${generalFileName}_${filenameInput}_V${nextVersion}.docx`;
+        }
+        else{
+          alert('Filename is required.');
+          notRequestor = false;
+        }
+      }
+
+      if(notRequestor){
+        console.log(filename);
+
+        const folderPath = `/sites/ContractMgt/${libraryTitle}/${companyName}/${requestID}`;
+
+        await this.addFolderToDocumentLibrary(libraryTitle, companyName, requestID)
+          .then(async () => {
           try {
-            await this.addFileToFolder2(folderPath, filename_add, content_add, requestID.toString());
+            await this.addFileToFolder2(folderPath, filename, content_add, requestID.toString());
           }
           catch (e) {
             console.log(e.message);
           }
         });
 
-      this.renderRequestDetails(requestID, companyName);
+        this.renderRequestDetails(requestID, companyName);
+        // location.reload();
+      }
+      else{
+        notRequestor = true;
+        if (input) {
+          input.value = '';
+          content_add = null;
+        }
+      }
+
+      function getLatestVersionFileRequestor(files) {
+        let latestFile = null;
+        let maxVersion = 0;
+
+        files.forEach(file => {
+            const match = file.Name.match(/Requestor_V(\d+)\.docx$/);
+            if (match) {
+                const version = parseInt(match[1], 10);
+                if (version > maxVersion) {
+                    maxVersion = version;
+                    latestFile = file;
+                }
+            }
+        });
+
+        return latestFile;
+      }
+
+      function getNextVersionRequestor(filename) {
+          const match = filename.match(/Requestor_V(\d+)\.docx$/);
+          if (match) {
+              return parseInt(match[1], 10) + 1;
+          }
+          return 1;
+      }
 
     });
 
-    //New document button
-    $("#newContractFile").click(async (e) => {
-      const libraryTitle = "Contracts_ToReview";
+    // //New document button
+    // $("#newContractFile").click(async (e) => {
+    //   e.preventDefault(); // Prevent the default form submission
+  
+    //   const libraryTitle = "Contracts";
+    //   const library = sp.web.lists.getByTitle(libraryTitle);
+  
+    //   // Get the current date in YYYY-MM-DD format
+    //   const currentDate = new Date().toISOString().split('T')[0];
+    //   console.log(currentDate);
+  
+    //   // Prompt for filename
+    //   const filename = await prompt("Enter the filename:");
+    //   console.log(filename);
+
+    //   if (filename) {
+
+    //     try {
+    //       const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+    //       const files = await folder.files();
+    //       const nextVersion = getNextVersion(files);
+
+    //       const fileNameDocx = `${currentDate}_${companyName}_${requestID}_${typeOfAgreement}_${party2}_${filename}_V${nextVersion}.docx`;
+    //       await folder.files.add(fileNameDocx, "", false);
+    //       alert('File created successfully.');
+    //     }
+    //     catch (error) {
+    //       console.error("Error creating file: ", error);
+    //       alert(`Error creating file: ${error.message}`);
+    //     }
+
+    //   } else {
+    //     alert("Filename is required.");
+    //   }
+  
+    //   function getNextVersion(files) {
+    //     let maxVersion = 0;
+    
+    //     files.forEach(file => {
+    //         const match = file.Name.match(/V(\d+)\.docx$/);
+    //         if (match) {
+    //             const version = parseInt(match[1], 10);
+    //             if (version > maxVersion) {
+    //                 maxVersion = version;
+    //             }
+    //         }
+    //     });
+    
+    //     return maxVersion + 1;
+    //   }
+    // });
+
+    //New Document Version
+    $("#newContractVersion").click(async (e) => {
+      e.preventDefault(); // Prevent the default form submission
+  
+      const libraryTitle = "Contracts";
       const library = sp.web.lists.getByTitle(libraryTitle);
+  
       // Prompt for filename
       const filename = await prompt("Enter the filename:");
       console.log(filename);
-      const fileNameDocx = filename + '.docx';
+  
+      if (filename) {
+        try {
+          const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+          const files = await folder.files();
+          
+          const latestFile = getLatestVersionFile(files);
+          const nextVersion = latestFile ? getNextVersion(latestFile.Name) : 1;
 
-      try {
-        await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID).files.add(fileNameDocx, false);
-        console.log("File created successfully");
-      }
-      catch (error) {
-        console.error(error);
+          const newFileName = `${generalFileName}_${filename}_V${nextVersion}.docx`;
+          
+          if (latestFile) {
+              console.log('Copied');
+              // Retrieve the file content as a blob
+              const fileContent = await sp.web.getFileByServerRelativeUrl(latestFile.ServerRelativeUrl).getBlob();
+              await folder.files.add(newFileName, fileContent, false);
+          } else {
+            console.log('New file');
+            await folder.files.add(newFileName, "", false);
+          }
+          
+          alert('File created successfully.');
+        } catch (error) {
+            console.error("Error creating file: ", error);
+            alert(`Error creating file: ${error.message}`);
+        }
+        this.renderRequestDetails(requestID, companyName);
+        // location.reload();
+      } else {
+          alert("Filename is required.");
       }
     });
 
+    function getLatestVersionFile(files) {
+      let latestFile = null;
+      let maxVersion = 0;
+
+      files.forEach(file => {
+        const match = file.Name.match(/_V(\d+)\.docx$/);
+        if (match && !file.Name.includes('_Requestor_')) {
+            const version = parseInt(match[1], 10);
+            if (version > maxVersion) {
+                maxVersion = version;
+                latestFile = file;
+            }
+        }
+      });
+
+      if(latestFile === null){
+        return files[0];
+      }
+
+      return latestFile;
+    }
+
+    function getNextVersion(filename) {
+        const match = filename.match(/V(\d+)\.docx$/);
+        if (match) {
+            return parseInt(match[1], 10) + 1;
+        }
+        return 1;
+    }
+  
     //Use template button
     $("#useContractTemplate").click(async (e) => {
       $('#contractsDatatableDiv').show();
 
       const searchBarHTML = `
-        <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" />
-        <img id="searchButton" src="${absoluteUrl}/Site%20Assets/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
+        <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" autocomplete="off">
+        <img id="searchButton" src="${absoluteUrl}/SiteAssets/Images/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
         <div id="searchResults"></div>
       `;
     
-    // Append table to container
-    $('#sharepointSearch').html(searchBarHTML);
-    
-    // Bind SharePoint search to image button
-    this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(absoluteUrl, siteUrl, companyName, requestID));
+      // Append table to container
+      $('#sharepointSearch').html(searchBarHTML);
+      
+      // Bind SharePoint search to image button
+      this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(absoluteUrl, companyName, requestID));
 
       // const useTemplateLoader = document.getElementById('useTemplateLoader');
       // useTemplateLoader.style.display = 'Block';
 
-      // const libraryTitle = "Contracts_ToReview";
+      // const libraryTitle = "Contracts";
       // const library = sp.web.lists.getByTitle(libraryTitle);
 
       // await this.getAllDocuments(library).then(dataTable => {
@@ -636,11 +858,10 @@ legend {
       //   }
       // });
       
-      const siteUrl = 'https://frcidevtest.sharepoint.com/sites/ContractMgt';
-      const libraryName = 'Contracts_ToReview';
+      const libraryName = 'Contracts';
 
       try {
-        const allDocuments = await this.fetchDocumentsFromLibrary(siteUrl, libraryName);
+        const allDocuments = await this.fetchDocumentsFromLibrary(absoluteUrl, libraryName);
         console.log(allDocuments);
         const tableHtml = `
             <table id="contractsDatatable" class="${styles.existingFilesDatatable}">
@@ -662,6 +883,9 @@ legend {
   
         // Append table to container
         const existingFilesContainer: Element = this.domElement.querySelector('#contractsDatatableDiv');
+        const legend = existingFilesContainer.querySelector('legend');
+        existingFilesContainer.innerHTML = '';
+        existingFilesContainer.appendChild(legend);
         existingFilesContainer.innerHTML += tableHtml;
 
         console.log('All documents:', allDocuments);
@@ -681,7 +905,7 @@ legend {
                   data: null, className: 'view-col', render: function (data, type, row) {
                       return `
                         <button id="previewExistingFileBtn" data-url="${row.DocumentUrl}" title="Preview Document" class="${styles.datatableBtn}">
-                          <img src="${absoluteUrl}/Site%20Assets/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
+                          <img src="${absoluteUrl}/SiteAssets/Images/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
                         </button>
                       `;
                   }
@@ -690,7 +914,7 @@ legend {
                     data: null, className: 'view-col', render: function (data, type, row) {
                         return `
                           <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
-                            <img src="${absoluteUrl}/Site%20Assets/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
+                            <img src="${absoluteUrl}/SiteAssets/Images/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
                           </button>
                         `;
                     }
@@ -707,28 +931,40 @@ legend {
   
           $('#contractsDatatable').on('click', '#selectExistingFileBtn', async (e) => {
             const sourceUrl = $(e.currentTarget).data('url');
+
+            const filenameInput = await prompt("Enter the filename:");
+
+            if(filenameInput && filenameInput.trim() !== ''){
+              const libraryTitle = "Contracts";
+              const library = sp.web.lists.getByTitle(libraryTitle);
+
+              const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+              const files = await folder.files();
+
+              const latestFile = getLatestVersionFile(files);
+              const nextVersion = latestFile ? getNextVersion(latestFile.Name) : 1;
   
-            const filename = await prompt("Enter the filename:");
-            console.log(filename);
-            const fileNameDocx = filename + '.docx';
-  
-            // Construct the destination URL dynamically
-            const destinationFolder = `/sites/ContractMgt/${libraryName}/${companyName}/${requestID}`;
-            const destinationFileUrl = `${destinationFolder + '/' + fileNameDocx}`;
-  
-            await this.addFolderToDocumentLibrary(libraryName, companyName, requestID)
-              .then(async () => {
-                try {
-                  //Gives error if file name already exists
-                  await sp.web.getFileByServerRelativePath(sourceUrl).copyTo(destinationFileUrl, false);
-                  console.log(`File copied successfully to ${destinationFileUrl}`);
-                  window.open(`ms-word:ofv|u|https://frcidevtest.sharepoint.com/${destinationFileUrl}`, '_blank');
-                }
-                catch (e) {
-                  console.log(e.message);
-                }
-              });
-  
+              const newFileName = `${generalFileName}_${filenameInput}_V${nextVersion}.docx`;
+
+              console.log(newFileName);
+              // Construct the destination URL dynamically
+              const destinationFolder = `/sites/ContractMgt/${libraryName}/${companyName}/${requestID}`;
+              const destinationFileUrl = `${destinationFolder + '/' + newFileName}`;
+
+              // Proceed with your functionality here, e.g., copying the file
+              try {
+                const file = await sp.web.getFileByServerRelativeUrl(sourceUrl).getBuffer();
+                await sp.web.getFolderByServerRelativeUrl(destinationFolder).files.add(destinationFileUrl, file, true);
+                console.log('File copied successfully.');
+                alert('File copied successfully.');
+              } catch (error) {
+                console.error('Error copying file: ', error);
+                alert('Error copying file.');
+              }
+            }
+            else{
+              alert('Filename is required.');
+            }
           });
 
           // $("#searchButton").click(async (e) => {
@@ -780,14 +1016,25 @@ legend {
       document.getElementById('uploadContract').click();
     });
 
+    $("#approvedByRequestor").click(async (e) => {
+      const confirmation = confirm("Are you sure you want to confirm the final version of the contract to proceed with the next step?");
+        if (confirmation) 
+        {
+          const list = sp.web.lists.getByTitle("Contract_Request");
+          await list.items.getById(Number(requestID)).update({
+            ContractStatus: 'ApprovedByRequestor'
+          });
+        }
+    });
+
   }
 
-  private async handleSearch(absoluteUrl, siteUrl, companyName, requestID): Promise<void> {
+  private async handleSearch(absoluteUrl, companyName, requestID): Promise<void> {
     const query = (this.domElement.querySelector('#searchQuery') as HTMLInputElement).value;
-    const libraryName = 'Contracts_ToReview';
+    const libraryName = 'Contracts';
 
     if (query) {
-      const results = await this.searchLibrary(siteUrl, query, libraryName);
+      const results = await this.searchLibrary(absoluteUrl, query, libraryName);
       console.log("Results Here:", results);
       this.displayResults(absoluteUrl, results, companyName, requestID);
     }
@@ -798,7 +1045,7 @@ legend {
     const libraryPath = `/sites/ContractMgt/${libraryName}`;
 
     //wildcard
-    const searchQueryUrl = `${this.context.pageContext.web.absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&sourceid='%7B368B4FE5-EB91-4554-9225-3AAABD3FF41E%7D'`;
+    const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&sourceid='%7B368B4FE5-EB91-4554-9225-3AAABD3FF41E%7D'`;
 
     const response = await this.context.spHttpClient.get(searchQueryUrl, SPHttpClient.configurations.v1);
     const jsonResponse = await response.json();
@@ -863,7 +1110,7 @@ legend {
           data: null, className: 'view-col', render: function (data, type, row) {
               return `
                 <button id="previewExistingFileBtn" data-url="${row.DocumentUrl}" title="Preview Document" class="${styles.datatableBtn}">
-                  <img src="${absoluteUrl}/Site%20Assets/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
+                  <img src="${absoluteUrl}/SiteAssets/Images/PreviewDocumentIcon.png" class="${styles.datatableBtnImg}">
                 </button>
               `;
           }
@@ -872,7 +1119,7 @@ legend {
             data: null, className: 'view-col', render: function (data, type, row) {
                 return `
                   <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
-                    <img src="${absoluteUrl}/Site%20Assets/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
+                    <img src="${absoluteUrl}/SiteAssets/Images/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
                   </button>
                 `;
             }
@@ -1073,11 +1320,17 @@ legend {
   // }
   
   private async renderRequestDetails(id: any, companyName: string) {
-    // $("#tbl_contract").html('');
-
-    this.getFileDetailsByFilter('Contracts_ToReview', id, companyName)
+    const contractVersionText = document.getElementById('newContractVersion');
+    if(contractVersionText){
+      contractVersionText.innerText = 'New Document';
+    }
+    this.getFileDetailsByFilter('Contracts', id, companyName)
         .then((fileDetailsArray) => {
             if (fileDetailsArray && fileDetailsArray.length > 0) {
+              if(contractVersionText){
+                contractVersionText.innerText = 'New Version';
+              }
+              tableDataLength = fileDetailsArray.length;
                 console.log("File details:", fileDetailsArray);
 
                 const tableHtml = `
@@ -1098,9 +1351,16 @@ legend {
                 `;
 
                 const listContainer: Element = this.domElement.querySelector('#tbl_contract');
+                const legend: Element = listContainer.querySelector('legend');
+                listContainer.innerHTML = '';
+                listContainer.appendChild(legend);
+                // const tableHtmlResert: Element = this.domElement.querySelector('#tableContracts');
+                // if(tableHtmlResert){
+                //   tableHtmlResert.innerHTML = '';
+                // }
                 listContainer.innerHTML += tableHtml;
 
-                let requestorFlag = false;
+                // let requestorFlag = false;
 
                 const tableData = fileDetailsArray.map(fileItem => {
                     const formattedTimeCreated = new Date(fileItem.TimeCreated).toLocaleDateString('en-GB');
@@ -1120,58 +1380,60 @@ legend {
                         LastModifiedAt: formattedTimeLastModified || 'N/A',
                         UploadedBy: fileItem.Author?.Title || 'N/A',
                         UniqueId: fileItem.UniqueId,
-                        Url: `https://frcidevtest.sharepoint.com${fileItem.ServerRelativeUrl}`,
-                        department
+                        Url: `${baseUrl+fileItem.ServerRelativeUrl}`,
                     };
                 });
 
                 $('#tableContracts').DataTable({
-                    data: tableData,
-                    columns: [
-                        { data: 'Name', className: 'contract-name-col' },
-                        { data: 'CreatedAt', className: 'column-width-15' },
-                        { data: 'ModifiedBy', className: 'column-width-15' },
-                        { data: 'LastModifiedAt', className: 'column-width-15' },
-                        { data: 'UploadedBy', className: 'column-width-15' },
-                        {
-                          data: null, className: 'view-col', render: function (data, type, row) {
-                              if (row.department !== "Requestor" || !requestorFlag) {
-                                  requestorFlag = true;
-                                  return `
-                                      <ul class="list-inline m-0" style="display: grid; align-items: center;">
-                                          <li class="list-inline-item">
-                                              <button id="btn_view_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="tooltip" data-placement="top" title="View" style="display: none;">
-                                                  <i class="fas fa-eye"></i>
-                                              </button>
-                                          </li>
-                                          <li class="list-inline-item">
-                                              <button id="modalActivate_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="modal" data-target="#exampleModalPreview" style="display: block; width: auto;">
-                                                  <i class="fas fa-eye"></i>
-                                              </button>
-                                          </li>
-                                      </ul>
-                                  `;
-                              } 
-                              else {
-                                return '<td class="view-col"></td>';
-                              }
-                          }
-                        }
-                    ],
-                    order: [],
-                    pageLength: -1
+                  data: tableData,
+                  columns: [
+                    { data: 'Name', className: 'contract-name-col' },
+                    { data: 'CreatedAt', className: 'column-width-15' },
+                    { data: 'ModifiedBy', className: 'column-width-15' },
+                    { data: 'LastModifiedAt', className: 'column-width-15' },
+                    { data: 'UploadedBy', className: 'column-width-15' },
+                    {
+                      data: null, className: 'view-col', render: function (data, type, row) {
+                        // if (requestorFlag && ((departments.length === 1) && departments.includes('Requestor'))) {
+                        //     return '<td class="view-col"></td>';
+                        // } 
+                        // if (((departments.length === 1) && departments.includes('Requestor'))) {
+                        //   return '<td class="view-col"></td>';
+                        // } 
+                        // else {
+                          // requestorFlag = true;
+                          return `
+                              <ul class="list-inline m-0" style="display: grid; align-items: center;">
+                                  <li class="list-inline-item">
+                                      <button id="btn_view_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="tooltip" data-placement="top" title="View" style="display: none;">
+                                          <i class="fas fa-eye"></i>
+                                      </button>
+                                  </li>
+                                  <li class="list-inline-item">
+                                      <button id="modalActivate_${row.UniqueId}" class="btn btn-secondary btn-sm rounded-circle" type="button" data-toggle="modal" data-target="#exampleModalPreview" style="display: block; width: auto;">
+                                          <i class="fas fa-eye"></i>
+                                      </button>
+                                  </li>
+                              </ul>
+                          `;
+                        // }
+                      }
+                    }
+                  ],
+                  order: [],
+                  pageLength: -1
                 });
 
                 tableData.forEach(fileDetails => {
                   console.log(fileDetails);
-                  if(department !== "Requestor"){
+                  if((departments.length === 1) && departments.includes('Requestor')){
                     $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                      window.open(`ms-word:ofv|u|${fileDetails.Url}`, '_blank');
+                      window.open(`${fileDetails.Url}`);
                     });
                   }
                   else{
                     $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                      window.open(`${fileDetails.Url}`);
+                      window.open(`ms-word:ofv|u|${fileDetails.Url}`, '_blank');
                     });
                   }
                 });
@@ -1185,29 +1447,72 @@ legend {
   }
 
   public async checkCurrentUsersGroupAsync() {
+    // var currentRole;
     let groupList = await sp.web.currentUser.groups();
-
+    console.log('grouplist: ', groupList);
+  
+    // const urlParams = new URLSearchParams(window.location.search);
+    // const updateRequestID = urlParams.get('requestid');
+    
     if (groupList.filter(g => g.Title == sharepointConfig.Groups.Requestor).length == 1) {
-      department = "Requestor";
-      console.log("You are a requestor", department);
-      // $(".legalDept").css("display", "none");
+      departments.push("Requestor");
     }
-    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.InternalOwner).length == 1) {
-      department = "Owner";
-      console.log("You are an", department);
-      // $(".legalDept").css("display", "none");
-      // $('#commentSection').hide();
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.InternalOwner).length == 1) {
+      departments.push("InternalOwner");
     }
-    else if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
-      department = "Despatcher";
-      console.log("You are a", department);
-      // $(".legalDept").css("display", "block");
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.ExternalOwner).length == 1) {
+      departments.push("ExternalOwner");
     }
-    else {
-      department = "null";
-      console.log("You are not in any group");
-      // $(".legalDept").css("display", "none");
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
+      departments.push("Despatcher");
     }
+    if (groupList.filter(g => g.Title == sharepointConfig.Groups.DirectorsView).length == 1) {
+      departments.push("DirectorsView");
+    }
+
+    console.log(departments);
+
+    // if (departments.length === 0) {
+    //   departments.push("noGroup");
+    // }
+    // else if(departments.length === 1) {
+    //   if (departments.includes('Requestor')) {
+    //     if (!updateRequestID){
+    //       return currentRole = 'RequestorCreate'; //New Request
+    //     }
+    //     else{
+    //       return currentRole = 'RequestorUpdate'; //Update Request
+    //     }
+    //   }
+    //   else if (departments.includes('ExternalOwner')) {
+    //     return currentRole = 'ExternalOwnerOnly' //External Owner Only -> Disable Submit Button
+    //   }
+    // }
+    // else if(departments.length === 2){
+    //   if (departments.includes('Requestor') && (departments.includes('InternalOwner') || departments.includes('ExternalOwner') || (departments.includes('DirectorsView')))) {
+    //     if (!updateRequestID){
+    //       if(departments.includes('DirectorsView')){
+    //         return currentRole = 'RequestorCreate'; //New Request by Director's View
+    //       }
+    //       else{
+    //         return currentRole = 'OwnerCreate'; //New Request by Internal Owner or External Owner on behalf of requestor or for themselves
+    //       }
+    //     }
+    //     else {
+    //       return currentRole = 'OwnerView'; //Internal Owner or External Owner
+    //     }
+    //   }
+    // }
+    // else if(departments.length === 3){
+    //   if (departments.includes('Requestor') && departments.includes('InternalOwner') && departments.includes('Despatcher')){
+    //     if (!updateRequestID){
+    //       return currentRole = 'DespatcherCreate'; //New Request by despatcher on behalf of requestor
+    //     }
+    //     else{
+    //       return currentRole = 'DespatcherAssign'; //Despatcher edit and assign
+    //     }
+    //   }
+    // }
   }
 
   //Load timeline comments
@@ -1215,7 +1520,7 @@ legend {
     const timeline = document.getElementById('commentTimeline');
     timeline.innerHTML = '';
   
-    const CommentList = await sp.web.lists.getByTitle("Comments").items.select("RequestID,Comment,CommentBy,CommentDate").filter(`RequestID eq '${updateRequestID}'`).get();
+    const CommentList = await sp.web.lists.getByTitle("Comments").items.select("RequestID,Comment,CommentBy,CommentDate,CommentByName").filter(`RequestID eq '${updateRequestID}'`).get();
     console.log('Commentlist', CommentList);
   
     const users: any[] = await sp.web.siteUsers();
@@ -1245,15 +1550,15 @@ legend {
       }
   
       let userEmail = item.CommentBy;
-      let userTitle = '';
-      users.forEach(user => {
-        if (user.Email === userEmail) {
-          userTitle = user.Title;
-          return;
-        }
-      });
+      // let userTitle = '';
+      // users.forEach(user => {
+      //   if (user.Email === userEmail) {
+      //     userTitle = user.Title;
+      //     return;
+      //   }
+      // });
   
-      const isCurrentUser = userTitle === currentUserTitle;
+      const isCurrentUser = item.CommentByName;
       const containerClass = isCurrentUser ? 'container darker' : 'container';
       const timeClass = isCurrentUser ? 'time-left' : 'time-right';
       const userTitleClass = isCurrentUser ? 'user-title-right' : 'user-title-left';
@@ -1262,7 +1567,7 @@ legend {
       timelineItem.className = 'timeline-item';
       timelineItem.innerHTML = `
         <div class="${containerClass}">
-          <div class="${userTitleClass}">#${userTitle}</div>
+          <div class="${userTitleClass}">#${isCurrentUser}</div>
           <div class="comment-text">${comment}</div>
           <span class="${timeClass}">${formattedCommentDate}</span>
         </div>
@@ -1287,8 +1592,7 @@ legend {
   public async getFileDetailsByFilter(libraryName, reqId, companyName) {
     try {
       let folderPath = libraryName + "/" + companyName + "/" + reqId;
-      let currentWebUrl = this.context.pageContext.web.absoluteUrl;
-      let requestUrl = `${currentWebUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files?$orderby=TimeCreated desc&$expand=Author,ModifiedBy`;
+      let requestUrl = `${absoluteUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files?$orderby=TimeCreated desc&$expand=Author,ModifiedBy`;
       console.log('RequestURl: ', requestUrl);
       const response = await fetch(requestUrl, {
         method: 'GET',

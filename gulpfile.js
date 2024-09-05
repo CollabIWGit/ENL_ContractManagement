@@ -4,14 +4,14 @@ const build = require('@microsoft/sp-build-web');
 
 build.configureWebpack.mergeConfig({
   additionalConfiguration: (generatedConfiguration) => {
-      generatedConfiguration.module.rules.push({
-          test: /\.woff2(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-          loader: 'url-loader',
-          query:{
-              limit:10000,mimetype:'application/font-woff2'
-          }
-      });
-      return generatedConfiguration;
+    generatedConfiguration.module.rules.push({
+      test: /\.woff2(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+      loader: 'url-loader',
+      query: {
+        limit: 10000, mimetype: 'application/font-woff2'
+      }
+    });
+    return generatedConfiguration;
   }
 });
 
