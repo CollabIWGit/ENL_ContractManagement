@@ -329,15 +329,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       </div>
                     </div>
 
-                    <div class="${styles.controls} ${styles['col-1-3']}" style="display: flex; flex-direction: column;">
-                      <label for="contributors">Contributors (Email)</label>
-                      <div style="display: flex; flex-direction: column; position: relative; height: 100%;">
-                        <input type="text" id="contributors_email" style="margin-bottom: 0px; padding-right: 5rem;" autocomplete="off">
-                        <div id="contributors" class="${styles.contributorEntryContainer}"></div>
-                        <button class="${styles.addPartiesButton}" id="addContributors" type="button">+</button>
-                      </div>
-                    </div>
-
                   </div>
 
                 </fieldset>
@@ -392,46 +383,35 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                   <legend>PARTIES TO THE AGREEMENT</legend>
                   
                   <div class="${styles.grid}" style="width: 100%; display: flex;">
-                    <div style="width: 100%;">
-                      <div class="${styles['col-1-2']}">
-                        <div class="${styles.controls}">
-                          <label for="party1"">Name of Party 1(ENL-Rogers side)*</label><span id="party1_error" class="${styles.errorSpan}">Please select a valid company.</span>
-                          <input type="text" placeholder="Please select.." id="party1" list='companies_folder' required autocomplete="off">
+                    <div class="${styles['col-1-2']}">
+                      <div class="${styles.controls}">
+                        <label for="party1"">Name of Party 1(ENL-Rogers side)*</label><span id="party1_error" class="${styles.errorSpan}">Please select a valid company.</span>
+                        <input type="text" placeholder="Please select.." id="party1" list='companies_folder' required autocomplete="off">
+                        <datalist id="companies_folder"></datalist>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="${styles.grid}" style="width: 100%; display: flex;">
+                    <div class="${styles['col-1-2']}">
+                      <div class="${styles.controls}">
+                        <div style="position: relative;">
+                          <label for="other_parties" 
+                            title="If there are more than 2 parties to the agreement, add the remaining parties using the +"
+                          >Other Parties</label>
+                          <input type="text" list='companies_folder' id="other_parties" autocomplete="off">
                           <datalist id="companies_folder"></datalist>
+                          <button class="${styles.addPartiesButton}" id="addOtherParties">+</button>
                         </div>
                       </div>
-
-                      <div class="${styles['col-1-2']}">
-                        <div class="${styles.controls}">
-                          <label for="party2">Name of Party 2*</label>
-                          <input type="text" id="party2" list='companies_folder' required autocomplete="off">
-                          <datalist id="companies_folder"></datalist>
-                          <select name="party2_type" class="${styles.addPartiesButton} ${styles.dropdownPadding}" id="party2_type">
-                            <option value="Internal" selected>Internal</option>
-                            <option value="External">External</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div class="${styles['col-1-2']}">
-                        <div class="${styles.controls}">
-                          <div style="position: relative;">
-                            <label for="other_parties" 
-                             title="If there are more than 2 parties to the agreement, add the remaining parties using the +"
-                            >Other Parties</label>
-                            <input type="text"  id="other_parties" autocomplete="off">
-                            <button class="${styles.addPartiesButton}" id="addOtherParties">+</button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="${styles['col-1-2']}">
-                        <div class="${styles.controls}">
-                          <div style="position: relative;">
-                            <label for="party2_persons">Party 2 Contributors Email (Internal Only)</label>
-                            <input type="text" id="party2_persons" autocomplete="off">
-                            <button class="${styles.addPartiesButton}" id="addParty2">+</button>
-                          </div>
+                    </div>
+                    
+                    <div class="${styles['col-1-2']}">
+                      <div class="${styles.controls}">
+                        <div style="position: relative;">
+                          <label for="contributors_email">Contributors Email (Internal Only)</label>
+                          <input type="text" id="contributors_email" autocomplete="off">
+                          <button class="${styles.addPartiesButton}" id="addParty2">+</button>
                         </div>
                       </div>
                     </div>
@@ -472,7 +452,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                                   <table id='tbl_party2' class='table table-striped' style="margin-bottom: 1rem;">
                                     <thead>
                                       <tr>
-                                        <th class=" text-left">Party 2</th>
+                                        <th class=" text-left">Contributors</th>
                                         <th class="text-center"></th>
                                       </tr>
                                     </thead>
@@ -575,7 +555,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Retrieve Request ID
     const urlParams = new URLSearchParams(window.location.search);
     const updateRequestID = urlParams.get('requestid');
-    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Party2_agreement","Party2_Type","Contributors","Party2_Persons").filter(`ID eq ${updateRequestID}`).get();
+    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Contributors","Party1_agreement").filter(`ID eq ${updateRequestID}`).get();
     console.log(contractDetails);
     // const NameOfAgreement = contractDetails[0].NameOfAgreement;
     let contractStatus = '';
@@ -583,19 +563,19 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     // let NameOfRequestor = '';
     // let NameOfOwner = '';
     let isConfidential = '';
-    let party2_agreement = '';
-    let party2_type = '';
+    let party1_agreement = '';
+    // let party2_type = '';
     let contributorsArrayInitial = [];
-    let party2ContributorsArrayInitial = [];
+    // let party2ContributorsArrayInitial = [];
     // const typeOfAgreement = contractDetails[0].TypeOfContract;
     // const otherParties = contractDetails[0].Others_parties;
     let onBehalf: boolean = false;
 
     let currentUserNameFromField = '';
 
-    const party2PersonsInput = document.getElementById("party2_persons") as HTMLInputElement;
-    const addParty2Button = document.getElementById("addParty2") as HTMLButtonElement;
-    const party2TypeInput = document.getElementById("party2") as HTMLInputElement;
+    // const party2PersonsInput = document.getElementById("party2_persons") as HTMLInputElement;
+    // const addParty2Button = document.getElementById("addParty2") as HTMLButtonElement;
+    // const party2TypeInput = document.getElementById("party2") as HTMLInputElement;
 
     document.getElementById('requestorSubmit').innerHTML += `
       <button type="submit" id="saveToList"><i class="fa fa-refresh icon" style="display: none;"></i>Save</button>
@@ -626,7 +606,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       await this.setRequestorDetails(onBehalf);
       currentUserNameFromField = String($("#requestor_name").val());
       $("#authorisedApprover").val(currentUserNameFromField);
-
     }
     //Update Request
     else {
@@ -635,19 +614,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       // NameOfRequestor = contractDetails[0].NameOfRequestor;
       // NameOfOwner = contractDetails[0].Owner;
       isConfidential = contractDetails[0].Confidential;
-      party2_agreement = contractDetails[0].Party2_agreement;
+      // party2_agreement = contractDetails[0].Party2_agreement;
       contractStatus = contractDetails[0].ContractStatus;
-      party2_type = contractDetails[0].Party2_Type;
+      // party2_type = contractDetails[0].Party2_Type;
       if(contractDetails[0].Contributors){
         contributorsArrayInitial = contractDetails[0].Contributors.split(';').map(email => email.trim());
-      }
-      if(contractDetails[0].Party2_Persons){
-        party2ContributorsArrayInitial = contractDetails[0].Party2_Persons.split(';').map(email => email.trim());
-      }
-      if(party2_type === "External"){
-        party2PersonsInput.disabled = true;
-        addParty2Button.disabled = true;
-        party2TypeInput.removeAttribute("list");
       }
 
       //Display Accept or Reject
@@ -794,7 +765,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                 <input type="date"  id="due_date" required>
               </div>
               <div class="${styles.controls}">
-                <label for="contractType">Type of Contract*</label><span id="contractType_error" class="${styles.errorSpan}">Please select a valid type.</span>
+                <label for="contractType">Type of Contract*</label>
                 <input type="text" id="contractType" placeholder="Please select.." list='contractTypeList' required autocomplete="off">
                 <datalist id="contractTypeList"></datalist>          
               </div>
@@ -884,8 +855,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         if (inputElement.value && !options.includes(inputElement.value)) {
           errorSpan.style.display = "inline";
           inputElement.value = '';
-        } else {
-          errorSpan.style.display = "none";
+        }
+        else {
+          if(errorSpan){
+            errorSpan.style.display = "none";
+          }
         }
       });
     });
@@ -898,20 +872,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         $("#uploadFile").css("display", "block");
       } else {
         $("#uploadFile").css("display", "none");
-      }
-    });
-
-    $("#party2_type").change(function (e) {
-      const selectedValue = (this as HTMLSelectElement).value;
-    
-      if (selectedValue === "External") {
-        party2PersonsInput.disabled = true;
-        addParty2Button.disabled = true;
-        party2TypeInput.removeAttribute("list");
-      } else {
-        party2PersonsInput.disabled = false;
-        addParty2Button.disabled = false;
-        party2TypeInput.setAttribute("list", "companies_folder");
       }
     });
 
@@ -957,7 +917,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Add party 2 contributors button functionality
     document.querySelector('#addParty2').addEventListener('click', (event) => {
       event.preventDefault();
-      const otherPartyValue = $("#party2_persons").val();
+      const otherPartyValue = $("#contributors_email").val();
 
       if (otherPartyValue === "") {
         alert("Please enter a valid email");
@@ -1001,7 +961,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       Directors_View: 50
     };
 
-    if(absoluteUrl === 'https://enlmu.sharepoint.com/sites/ContractMgt'){
+    if(absoluteUrl === 'https://enlmu.sharepoint.com/sites/LegalLink'){
       LegalLink_Group_ID = {
         Requestors: 13,
         Despatchers: 10,
@@ -1082,17 +1042,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         const confidentialValue = checkbox.checked ? 'YES' : 'NO';
         const authorityToApproveContract = $("input[name='authority_to_approve_contract']:checked").val();
 
-        const contributorsValue = getContributorsValue();
-        // console.log(contributorsValue);
+        const party2ContributorsValue = getParty2ContributorsValue();
+        console.log(party2ContributorsValue);
 
-        const contributorsArrayCurrent = getContributorsArray();
+        const contributorsArrayCurrent = getParty2ContributorsArray();
         console.log(contributorsArrayCurrent);
-
-        const party2CntributorsValue = getParty2ContributorsValue();
-        // console.log(party2CntributorsValue);
-
-        const party2CntributorsArrayCurrent = getParty2ContributorsArray();
-        console.log(party2CntributorsArrayCurrent);
 
         //Form data
         var formData = {
@@ -1100,15 +1054,15 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           Email: $("#email").val(),
           Phone_Number: $("#phone_number").val(),
           Company: $("#enl_company").val(),
-          Contributors: contributorsValue,
+          Contributors: party2ContributorsValue,
           RequestFor: $("#requestFor").val(),
           Confidential: confidentialValue,
           BriefDescriptionTransaction: $("#brief_desc").val(),
           Party1_agreement: $("#party1").val(),
-          Party2_agreement: $("#party2").val(),
-          Party2_Type: $("#party2_type").val(),
+          // Party2_agreement: $("#party2").val(),
+          // Party2_Type: $("#party2_type").val(),
           Others_parties: allOtherParties,
-          Party2_Persons: party2CntributorsValue,
+          // Party2_Persons: party2CntributorsValue,
           ExpectedCommencementDate: $("#expectedCommenceDate").val().toString(),
           AuthorityApproveContract: authorityToApproveContract,
           AuthorisedApprover: $("#authorisedApprover").val(),
@@ -1119,6 +1073,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         //Create Request
         if(currentRole === 'RequestorCreate' || currentRole === 'OwnerCreate' || currentRole === 'DespatcherCreate'){
           try {
+
+            const isValid = await validateContributorEmails(contributorsArrayCurrent);
+            if (!isValid) {
+              return;
+            }
+
             //Add item to Contract Request
             const iar = await sp.web.lists.getByTitle("Contract_Request").items.add(formData)
               .then((iar) => {
@@ -1154,7 +1114,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             // this.consoleFolderUsers(libraryTitle, folderID);
 
             //Final path in which document will be stored
-            const caseFolderPath = `/sites/ContractMgt/Contracts/${companyFolderName}/${contractFolderName}`;
+            const caseFolderPath = `/sites/LegalLink/Contracts/${companyFolderName}/${contractFolderName}`;
 
             //Assign Permissions
             try {
@@ -1170,27 +1130,27 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               console.log("LegalLink_Despatchers group added with permissions");
             
               // Loop through each row in party2Table and assign edit permissions
-              var dataParty2 = party2Table.rows().data();
-              for (var i = 0; i < dataParty2.length; i++) {
-                var userEmailParty2 = dataParty2[i][0];
+              // var dataParty2 = party2Table.rows().data();
+              // for (var i = 0; i < dataParty2.length; i++) {
+              //   var userEmailParty2 = dataParty2[i][0];
             
-                try {
-                  // Get the user's principal ID
-                  var userPrincipalId = await this.getPrincipalIdForUserByEmail(userEmailParty2);
-                  if (userPrincipalId) {
-                    await this.addRoleAssignment(requestDigest, libraryTitle, folderID, userPrincipalId, permissionLevels.Edit);
-                    console.log(`Permissions assigned to ${userEmailParty2}`);
-                  } else {
-                    console.error(`Failed to get principal ID for ${userEmailParty2}`);
-                  }
-                } catch (error) {
-                  console.error(`Failed to assign permissions for ${userEmail}:`, error.message);
-                }
-              }
+              //   try {
+              //     // Get the user's principal ID
+              //     var userPrincipalId = await this.getPrincipalIdForUserByEmail(userEmailParty2);
+              //     if (userPrincipalId) {
+              //       await this.addRoleAssignment(requestDigest, libraryTitle, folderID, userPrincipalId, permissionLevels.Edit);
+              //       console.log(`Permissions assigned to ${userEmailParty2}`);
+              //     } else {
+              //       console.error(`Failed to get principal ID for ${userEmailParty2}`);
+              //     }
+              //   } catch (error) {
+              //     console.error(`Failed to assign permissions for ${userEmail}:`, error.message);
+              //   }
+              // }
               
               // Loop through each contributor email and assign edit permissions
-              for (var i = 0; i < contributorsArrayCurrent .length; i++) {
-                var userEmail = contributorsArrayCurrent [i];
+              for (var i = 0; i < contributorsArrayCurrent.length; i++) {
+                var userEmail = contributorsArrayCurrent[i];
             
                 try {
                   // Get the user's principal ID
@@ -1244,50 +1204,21 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           const removeContributorArray = contributorsArrayInitial.filter(email => !contributorsArrayCurrent.includes(email));
           const addContributorArray = contributorsArrayCurrent.filter(email => !contributorsArrayInitial.includes(email));
 
-          const removeParty2ContributorArray = party2ContributorsArrayInitial.filter(email => !party2CntributorsArrayCurrent.includes(email));
-          const addParty2ContributorArray = party2CntributorsArrayCurrent.filter(email => !party2ContributorsArrayInitial.includes(email));
-
-          const duplicateValues = addParty2ContributorArray.filter(email => addContributorArray.includes(email));
-
-          if (duplicateValues.length > 0) {
-            return alert(`Duplicate emails found: ${duplicateValues.join(', ')}`);
-          }
-
-          const removeCombinedArray = removeParty2ContributorArray.concat(removeContributorArray);
-          const addCombinedArray = addParty2ContributorArray.concat(addContributorArray);
-          
-          console.log('Length', addCombinedArray);
-          if (addCombinedArray.length > 0) {
-            const validEmails: string[] = [];
-            for (const email of addCombinedArray) {
-              try {
-                const userPrincipalId = await this.getPrincipalIdForUserByEmail(email);
-                if (userPrincipalId) {
-                  validEmails.push(email);
-                } else {
-                  return alert(`Invalid email for permissions: ${email}`);
-                }
-              }
-              catch (error) {
-                console.error(`Error validating email ${email}:`, error);
-                return alert(`Error validating email: ${email}`);
-              }
-            }
-          }
-
-          console.log('Remove', removeCombinedArray);
-          console.log('Add', addCombinedArray);
-
           const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(updateRequestID).listItemAllFields.select('Id').get();
           console.log(folder);
           const folderId = folder.Id;
 
-          if (removeCombinedArray.length > 0) {
-            await removePermissions(removeCombinedArray, folderId);
+          const isValid = await validateContributorEmails(addContributorArray);
+          if (!isValid) {
+            return;
           }
-          
-          if (addCombinedArray.length > 0) {
-            await addPermissions(addCombinedArray, folderId);
+
+          if (removeContributorArray.length > 0) {
+            await removePermissions(removeContributorArray, folderId);
+          }
+
+          if (addContributorArray.length > 0) {
+            await addPermissions(addContributorArray, folderId);
           }
 
           try {
@@ -1301,7 +1232,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               console.log("Item updated successfully");
             }
 
-            const caseFolderPath = `/sites/ContractMgt/Contracts/${companyName}/${updateRequestID}`;
+            const caseFolderPath = `/sites/LegalLink/Contracts/${companyName}/${updateRequestID}`;
 
             //If file has been uploaded
             if ($("#requestFor").val() == 'Review of Agreement') {
@@ -1323,23 +1254,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
       }
     });
-
-    function getContributorsValue() {
-      const container = document.getElementById('contributors') as HTMLDivElement;
-      const spans = container.getElementsByClassName(styles.contributorEmail);
-      const contributors = Array.from(spans)
-        .map(span => span.textContent?.trim() || '')
-        .filter(text => text !== '');
-      return contributors.join(';');
-    }
-    
-    function getContributorsArray() {
-      const container = document.getElementById('contributors') as HTMLDivElement;
-      const spans = container.getElementsByClassName(styles.contributorEmail);
-      return Array.from(spans)
-        .map(span => span.textContent?.trim() || '')
-        .filter(text => text !== '');
-    }
 
     function getParty2ContributorsValue() {
       const table = document.getElementById('tbl_party2') as HTMLTableElement;
@@ -1376,9 +1290,35 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           return cells[0]?.textContent?.trim() || '';
         })
         .filter(text => text !== '');
-    }    
+    }
 
     const getPrincipalIdForUserByEmail = this.getPrincipalIdForUserByEmail.bind(this);
+
+    async function validateContributorEmails(emailsArray){
+      if (emailsArray.length > 0) {
+        const validEmails: string[] = [];
+        for (const email of emailsArray) {
+          try {
+            const userPrincipalId = await getPrincipalIdForUserByEmail(email);
+            if (userPrincipalId) {
+              validEmails.push(email);
+            }
+            else {
+              alert(`Invalid email for permissions: ${email}`);
+              return false;
+            }
+          }
+          catch (error) {
+            console.error(`Error validating email ${email}:`, error);
+            alert(`Error validating email: ${email}`);
+            return false;
+          }
+        }
+        return true;
+      }   
+      return true;
+    }
+
     const removeRoleAssignments = this.removeRoleAssignments.bind(this);
     const addRoleAssignment = this.addRoleAssignment.bind(this);
 
@@ -1443,7 +1383,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
         const contractTyoe = $("#contractType").val();
         const currentDate = new Date().toISOString().split('T')[0];
-        const agreementName = (currentDate + '_' + companyName + '_' + updateRequestID + '_' + contractTyoe + '_' + party2_agreement);
+        const agreementName = (currentDate + '_' + companyName + '_' + updateRequestID + '_' + contractTyoe + '_' + party1_agreement);
 
         // Form data
         const assignData = {
@@ -1574,22 +1514,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     
       container.scrollTop = container.scrollHeight;
     });
-
-    document.getElementById('party2_type')!.addEventListener('change', function (event) {
-      const party2TypeSelect = event.target as HTMLSelectElement;
-      const table = document.getElementById('tbl_party2') as HTMLTableElement;
-      const rows = table.getElementsByTagName('tr');
-    
-      const dataRows = Array.from(rows).filter(row => {
-        const cells = row.getElementsByTagName('td');
-        return cells.length > 0 && cells[0].textContent?.trim() !== 'No data available in table';
-      });
-    
-      if (party2TypeSelect.value === 'External' && dataRows.length > 0) {
-        alert('Cannot change to External while there are entries in the table. Please remove all entries first.');
-        party2TypeSelect.value = 'Internal';
-      }
-    });
     
     document.addEventListener('DOMContentLoaded', function () {
       const datalists = document.querySelectorAll('datalist');
@@ -1709,7 +1633,6 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       container.appendChild(emailDiv);
     });
   }
-  
 
   //Retrieve folder user and group access
   private getFolderPermissions(libraryTitle, folderID) {
@@ -1886,7 +1809,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     if (partyType === 'otherParties') {
       $("#other_parties").val("");
     } else if (partyType === 'party2') {
-      $("#party2_persons").val("");
+      $("#contributors_email").val("");
     }
   }
 
@@ -1912,11 +1835,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         console.error("Dropdown element not found");
         return;
     }
-    const contractType = await sp.web.lists.getByTitle('Type of contracts').items.get();
+    const contractType = await sp.web.lists.getByTitle('Type of contracts').items.getAll();
+    console.log('ContractType', contractType);
 
     await Promise.all(contractType.map(async (result) => {
         const opt = document.createElement('option');
-        opt.value = result.Title;
+        opt.value = result.Identifier;
         drp_contractType.appendChild(opt);
     }));
   } 
@@ -1938,7 +1862,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   // Function to set requestor details
   public async setRequestorDetails(onBehalf: boolean) {
     const requestor = await sp.web.currentUser();
-    console.log("req:", requestor);
+    // console.log("req:", requestor);
 
     const fields = [
       { id: "#requestor_name", value: requestor.Title },
@@ -2130,7 +2054,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     try {
       let currentWebUrl = this.context.pageContext.web.absoluteUrl;
       let requestUrl = currentWebUrl.concat(`/_api/web/Lists/GetByTitle('Contract_Request')/items?$select=ID, NameOfRequestor, Email, Phone_Number, Company, Contributors, 
-      Party1_agreement, Party2_agreement, Party2_Type, Others_parties, Party2_Persons, BriefDescriptionTransaction, ExpectedCommencementDate, AssignedTo, Owner, AssigneeComment, DueDate,
+      Party1_agreement, Others_parties, BriefDescriptionTransaction, ExpectedCommencementDate, AssignedTo, Owner, AssigneeComment, DueDate,
       Confidential, AuthorityApproveContract, AuthorisedApprover, DueDate, TypeOfContract, NameOfAgreement, DespatcherComments, RequestFor &$filter=(ID eq '${id}') `);
       var doc = null;
       var date = null;
@@ -2156,10 +2080,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       Company: result.Company,
                       Contributors: result.Contributors,
                       Party1_agreement: result.Party1_agreement,
-                      Party2_agreement: result.Party2_agreement,
-                      Party2Type: result.Party2_Type,
                       Others_parties: result.Others_parties,
-                      Party2_Persons: result.Party2_Persons,
                       BriefDescriptionTransaction: result.BriefDescriptionTransaction,
                       ExpectedCommencementDate: result.ExpectedCommencementDate,
                       AuthorityApproveContract: result.AuthorityApproveContract,
@@ -2250,7 +2171,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                           $("#modalActivate").click(() => {
                             //console.log("calling viewing ...");
                             // this.submit_main();
-                            window.open(`ms-word:ofv|u|${baseUrl}/${fileDetails.fileUrl}`, '_blank');
+                            const extension = fileDetails.fileName.split('.').pop().toLowerCase();
+
+                            if (extension === 'pdf') {
+                                window.open(`${baseUrl}/${fileDetails.fileUrl}?web=1`, '_blank');
+                            } else if (extension === 'docx') {
+                                window.open(`ms-word:ofv|u|${baseUrl}/${fileDetails.fileUrl}`, '_blank');
+                            }
                             // Navigation.navigate(`${urlChoice}`, '_blank');
                           });
 
@@ -2269,38 +2196,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                     $("#phone_number").val(item.Phone_Number),
                     $("#enl_company").val(item.Company);
                     
-                    if (item.Contributors) {
-                      const contributorsArray = item.Contributors.split(';');
-                      const container = document.getElementById('contributors') as HTMLDivElement;
-                      container.innerHTML = '';
-                  
-                      contributorsArray.forEach(contributor => {
-                        if (contributor.trim() !== '') {
-                          const entryDiv = document.createElement('div');
-                          entryDiv.className = `${styles.contributorEntry}`;
-                          
-                          const entryText = document.createElement('span');
-                          entryText.className = `${styles.contributorEmail}`;
-                          entryText.textContent = contributor;
-                          
-                          const removeButton = document.createElement('button');
-                          removeButton.className = `${styles.removeButton}`;
-                          removeButton.innerHTML = '&#10060;';
-                          removeButton.onclick = function () {
-                            container.removeChild(entryDiv);
-                          };
-                          
-                          entryDiv.appendChild(entryText);
-                          entryDiv.appendChild(removeButton);
-                          container.appendChild(entryDiv);
-                        }
-                      });
-                    }
-                    
                     $("#requestFor").val(item.RequestFor);
                     $("#party1").val(item.Party1_agreement);
-                    $("#party2").val(item.Party2_agreement);
-                    $("#party2_type").val(item.Party2Type);
 
                     // Other parties populate table
                     // $("#other_parties").val(item.Others_parties);
@@ -2320,10 +2217,10 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       });
                     }
 
-                    if(item.Party2_Persons !== null && item.Party2_Persons !== "") {
-                      var party2_PersonsVal = item.Party2_Persons;
-                      party2_PersonsVal = party2_PersonsVal.replace(/;+$/, '');
-                      var party2Array = party2_PersonsVal.split(';');
+                    if(item.Contributors !== null && item.Contributors !== "") {
+                      var contributors_emailVal = item.Contributors;
+                      contributors_emailVal = contributors_emailVal.replace(/;+$/, '');
+                      var party2Array = contributors_emailVal.split(';');
                       var tbodyParty2 = document.getElementById('tb_party2');
                       tbodyParty2.innerHTML = '';
 

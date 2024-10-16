@@ -30,8 +30,7 @@ export class sideMenuUtils {
         <li id="adminSect">
         <a href="#adminManagment"><span class="fas fa-file-contract mr-2"></span>Admin Management</a>
         <ul id="adminManagment">
- 
-                  <li>
+        <li>
           <a id="add_contracts"><span class="fas fa-tasks mr-2"></span>Onboard contracts</a>
         </li>
           <li>
@@ -48,6 +47,10 @@ export class sideMenuUtils {
       <li>
       <a id="manageUsers"><span class="fas fa-tasks mr-2"></span>Manage Users</a>
      </li>
+
+        <li>
+          <a id="site_contents"><span class="fas fa-tasks mr-2"></span>Site Contents</a>
+        </li>
        
         </ul>
       </li>  
@@ -95,6 +98,10 @@ export class sideMenuUtils {
  
     $("#add_contracts").on("click", () => {
       Navigation.navigate(`${absoluteUrl}/SitePages/OnboardActiveContracts.aspx`, true);
+    });
+
+    $("#site_contents").on("click", () => {
+      Navigation.navigate(`${absoluteUrl}/_layouts/15/viewlsts.aspx?view=14`, true);
     });
  
  

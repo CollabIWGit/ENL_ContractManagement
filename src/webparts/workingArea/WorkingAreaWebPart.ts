@@ -83,6 +83,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     //Retrieve request id
     const urlParams = new URLSearchParams(window.location.search);
     const requestID = urlParams.get('requestid');
+    console.log(requestID);
     const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Party2_agreement","OwnerEmail","Email","ContractStatus").filter(`ID eq ${requestID}`).get();
     const NameOfAgreement = contractDetails[0].NameOfAgreement;
     const companyName = contractDetails[0].Company;
@@ -93,13 +94,13 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     const typeOfAgreement = contractDetails[0].TypeOfContract;
     const party2 = contractDetails[0].Party2_agreement;
     const contractStatus = contractDetails[0].ContractStatus;
-    console.log(contractDetails);
+    console.log('Here', contractDetails);
 
     var typeOfContract_Acronym = ''
     const contractType = await sp.web.lists.getByTitle('Type of contracts')
-      .items.filter(`Title eq '${typeOfAgreement}'`)
-      .select('Identifier')
-      .get();
+      .items.filter(`Identifier eq '${typeOfAgreement}'`)
+      // .select('Identifier')
+      .getAll();
     console.log(contractType);
 
     typeOfContract_Acronym = contractType[0].Identifier;
@@ -555,18 +556,21 @@ legend {
       // icon_add_comment.classList.add('show');
       // icon_add_comment.classList.add('spinning');
 
-      const currentUser = await sp.web.currentUser();
+      const currentUserComment = await sp.web.currentUser();
+      console.log('Current user here' + currentUserComment);
       let role;
       let commentToUser = '';
       let CommentByName = '';
 
       if (departments.includes('Despatcher') || departments.includes('InternalOwner')) {
         role = "Owner";
+        console.log('Owner Comment');
         commentToUser = RequestorEmail;
         CommentByName = NameOfRequestor;
       }
       else if (departments.includes('Requestor')){
         role = "Requestor";
+        console.log('Requestor Comment');
         commentToUser = OwnerEmail;
         CommentByName = Owner;
       }
@@ -578,8 +582,8 @@ legend {
         Title: requestID,
         RequestID: requestID,
         Comment: $("#comment").val(),
-        CommentBy: currentUser.UserPrincipalName, // Use Email
-        CommentByName: CommentByName,
+        CommentBy: currentUserComment.UserPrincipalName, // Use Email
+        CommentByName: currentUserComment.Title,
         CommentDate: moment().format("DD/MM/YYYY HH:mm"),
         CommentTo: commentToUser,
         NameOfAgreement: NameOfAgreement,
@@ -650,7 +654,7 @@ legend {
       if(notRequestor){
         console.log(filename);
 
-        const folderPath = `/sites/ContractMgt/${libraryTitle}/${companyName}/${requestID}`;
+        const folderPath = `/sites/LegalLink/${libraryTitle}/${companyName}/${requestID}`;
 
         await this.addFolderToDocumentLibrary(libraryTitle, companyName, requestID)
           .then(async () => {
@@ -832,7 +836,7 @@ legend {
 
       const searchBarHTML = `
         <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" autocomplete="off">
-        <img id="searchButton" src="${absoluteUrl}/SiteAssets/Images/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
+          <img id="searchButton" src="${absoluteUrl}/SiteAssets/Images/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
         <div id="searchResults"></div>
       `;
     
@@ -948,7 +952,7 @@ legend {
 
               console.log(newFileName);
               // Construct the destination URL dynamically
-              const destinationFolder = `/sites/ContractMgt/${libraryName}/${companyName}/${requestID}`;
+              const destinationFolder = `/sites/LegalLink/${libraryName}/${companyName}/${requestID}`;
               const destinationFileUrl = `${destinationFolder + '/' + newFileName}`;
 
               // Proceed with your functionality here, e.g., copying the file
@@ -1042,7 +1046,7 @@ legend {
 
   private async searchLibrary(siteUrl: string, query: string, libraryName: string): Promise<Array<{ Title: string, CreatedDate: string, ModifiedDate: string, sourceUrl: string, documentUrl: string}>> {
 
-    const libraryPath = `/sites/ContractMgt/${libraryName}`;
+    const libraryPath = `/sites/LegalLink/${libraryName}`;
 
     //wildcard
     const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&sourceid='%7B368B4FE5-EB91-4554-9225-3AAABD3FF41E%7D'`;
@@ -1433,7 +1437,12 @@ legend {
                   }
                   else{
                     $(`#modalActivate_${fileDetails.UniqueId}`).click(() => {
-                      window.open(`ms-word:ofv|u|${fileDetails.Url}`, '_blank');
+                      const extension = fileDetails.Name.split('.').pop().toLowerCase();
+                      if (extension === 'pdf') {
+                          window.open(`${fileDetails.Url}?web=1`, '_blank');
+                      } else if (extension === 'docx') {
+                        window.open(`ms-word:ofv|u|${fileDetails.Url}`, '_blank');
+                      }
                     });
                   }
                 });

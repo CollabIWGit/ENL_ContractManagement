@@ -881,6 +881,55 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
             }
         });
 
+        // $('#sendForSignature').on('click', async () => {
+        //     const fileDetails = await this.getFileDetailsByFilter('Contracts', updateRequestID);
+            
+        //     if (!fileDetails) {
+        //         alert('No file found for the specified request ID.');
+        //         return;
+        //     }
+            
+        //     const { fileUrl, fileName } = fileDetails;
+        
+        //     try {
+        //         const response = await fetch(fileUrl);
+        //         const blob = await response.blob();
+        
+        //         const formData = new FormData();
+        //         formData.append("File", blob, fileName);
+                
+        //         // Prepare Basic Auth credentials
+        //         const base64Credentials = btoa('iwapptest@frci.net:IW@sp2adobe$$'); // Replace with actual username and password
+                
+        //         // Upload the file to Adobe Sign via the local proxy
+        //         const uploadResponse = await fetch('https://proxytestiw-frci5.msappproxy.net/api/proxy/adobeSign', { 
+        //             method: 'POST',
+        //             body: formData,
+        //             headers: {
+        //                 'Authorization': `Basic ${base64Credentials}`,
+        //                 'Accept': 'application/json'
+        //             },
+        //             credentials: 'include' 
+        //         });
+                
+        //         const result = await uploadResponse.json();
+                
+        //         if (result && result.agreementViewList && result.agreementViewList.length > 0) {
+        //             const url = result.agreementViewList[0].url;
+        //             if (url) {
+        //                 window.open(url, '_blank');
+        //             } else {
+        //                 console.error('No URL found in the response');
+        //             }
+        //         } else {
+        //             console.error('Invalid response structure:', result);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error uploading file to Adobe Sign:', error);
+        //     }
+        // });
+        
+
         $('#sendForSignature').on('click', async () => {
             const fileDetails = await this.getFileDetailsByFilter('Contracts', updateRequestID);
         
@@ -899,9 +948,10 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 formData.append("File", blob, fileName);
             
                 // Upload the file to Adobe Sign via the local proxy
-                const uploadResponse = await fetch('http://localhost:3000/api/proxy/adobeSign', {
+                const uploadResponse = await fetch('https://proxytestiw-frci5.msappproxy.net/api/proxy/adobeSign', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include' 
                 });
             
                 const result = await uploadResponse.json();
@@ -937,20 +987,30 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         //         const formData = new FormData();
         //         formData.append("File", file, file.name); // Ensure the field name is correct
         
-        //         // Upload the file to Adobe Sign via the local proxy
-        //         const uploadResponse = await fetch('http://localhost:3000/api/proxy/adobeSign', {
+        //         // Make the API call to upload the file to Adobe Sign
+        //         const response = await fetch('https://secure.na4.adobesign.com/api/rest/v6/transientDocuments', {
         //             method: 'POST',
-        //             body: formData // Send the FormData object directly
-        //             // Do not set headers here; let the browser handle it
+        //             headers: {
+        //                 'Authorization': `Bearer 3AAABLblqZhD7WMt-0-z8I2BWXe6FaZAN68Y3piUGB8uW_1_LVBoo3IQalQFcF4Zz7HO6vmE2ji-HymCHZBbvSOp_TAy-5h0-`,  // Add your token here
+        //                 // No need to set 'Content-Type' for FormData, the browser will set it automatically
+        //             },
+        //             body: formData
         //         });
         
-        //         // Handle the response
-        //         const result = await uploadResponse.json();
-        //         console.log(result);
+        //         if (!response.ok) {
+        //             throw new Error(`Error uploading document: ${response.statusText}`);
+        //         }
+        
+        //         const result = await response.json();
+        //         console.log('File uploaded successfully:', result);
+        //         alert('File uploaded successfully!');
+        //         // You can now use the result.transientDocumentId for further steps like sending for signature
         //     } catch (error) {
-        //         console.error('Error uploading file to Adobe Sign:', error);
+        //         console.error('Error:', error);
+        //         alert(`Failed to upload file: ${error.message}`);
         //     }
         // });
+        
         
     }
     
@@ -1144,10 +1204,16 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         
 
             $("#modalActivate").click(() => {
-              //console.log("calling viewing ...");
-              // this.submit_main();
-              window.open(`ms-word:ofv|u|${baseUrl}/${fileDetails.fileUrl}`, '_blank');
-              // Navigation.navigate(`${urlChoice}`, '_blank');
+                //console.log("calling viewing ...");
+                // this.submit_main();
+                const extension = fileDetails.fileName.split('.').pop().toLowerCase();
+
+                if (extension === 'pdf') {
+                    window.open(`${baseUrl}/${fileDetails.fileUrl}?web=1`, '_blank');
+                } else if (extension === 'docx') {
+                    window.open(`ms-word:ofv|u|${baseUrl}/${fileDetails.fileUrl}`, '_blank');
+                }
+                // Navigation.navigate(`${urlChoice}`, '_blank');
             });
 
             fileUrl = `${baseUrl}/${fileDetails.fileUrl}`;
