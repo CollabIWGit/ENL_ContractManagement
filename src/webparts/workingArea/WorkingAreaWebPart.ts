@@ -155,6 +155,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     }
   
     .container .comment-text {
+      overflow-wrap: break-word;
     }
   
     .container .time-right {
@@ -1532,12 +1533,13 @@ legend {
     const CommentList = await sp.web.lists.getByTitle("Comments").items.select("RequestID,Comment,CommentBy,CommentDate,CommentByName").filter(`RequestID eq '${updateRequestID}'`).get();
     console.log('Commentlist', CommentList);
   
-    const users: any[] = await sp.web.siteUsers();
+    // const commentUsers: any[] = await sp.web.siteUsers();
   
     // Get current user
     const currentUser = await sp.web.currentUser();
-    console.log("Current:", currentUser);
+    console.log("Comments  Current:", currentUser);
     const currentUserTitle = currentUser.Title;
+    console.log("Comments  Current Name:", currentUserTitle);
   
     CommentList.forEach(item => {
       const comment = item.Comment;
@@ -1558,7 +1560,7 @@ legend {
         }
       }
   
-      let userEmail = item.CommentBy;
+      // let userEmail = item.CommentBy;
       // let userTitle = '';
       // users.forEach(user => {
       //   if (user.Email === userEmail) {
@@ -1567,16 +1569,16 @@ legend {
       //   }
       // });
   
-      const isCurrentUser = item.CommentByName;
+      const isCurrentUser = item.CommentByName === currentUserTitle ;
       const containerClass = isCurrentUser ? 'container darker' : 'container';
       const timeClass = isCurrentUser ? 'time-left' : 'time-right';
       const userTitleClass = isCurrentUser ? 'user-title-right' : 'user-title-left';
   
-      const timelineItem = document.createElement('li');
+      const timelineItem = document.createElement('l');
       timelineItem.className = 'timeline-item';
       timelineItem.innerHTML = `
         <div class="${containerClass}">
-          <div class="${userTitleClass}">#${isCurrentUser}</div>
+          <div class="${userTitleClass}">#${item.CommentByName}</div>
           <div class="comment-text">${comment}</div>
           <span class="${timeClass}">${formattedCommentDate}</span>
         </div>

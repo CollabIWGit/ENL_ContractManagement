@@ -668,7 +668,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 // return SPComponentLoader.loadScript('//cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/cjs/popper.min.js') 
             })
             .then(() => {
-                return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js')
+                return SPComponentLoader.loadScript('//cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js');
             })
             .then(() => {
                 console.log("Scripts loaded successfully");
@@ -717,7 +717,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 } else {
                 navPlaceholderID.style.width = '0';
                 middlePanelID.style.width = '73%';
-                middlePanelID.style.marginLeft = '0%'
+                middlePanelID.style.marginLeft = '0%';
                 minimizeButtonID.style.left = '0%';
                 }
             }
@@ -929,7 +929,6 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         //     }
         // });
         
-
         $('#sendForSignature').on('click', async () => {
             const fileDetails = await this.getFileDetailsByFilter('Contracts', updateRequestID);
         
@@ -950,8 +949,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 // Upload the file to Adobe Sign via the local proxy
                 const uploadResponse = await fetch('https://proxytestiw-frci5.msappproxy.net/api/proxy/adobeSign', {
                     method: 'POST',
-                    body: formData,
-                    credentials: 'include' 
+                    body: formData
                 });
             
                 const result = await uploadResponse.json();
@@ -970,7 +968,6 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 console.error('Error uploading file to Adobe Sign:', error);
             }
         });
-        
         
         // $('#sendForSignature').on('click', async () => {
         //     // Check if a file is selected by the user
@@ -1010,7 +1007,6 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         //         alert(`Failed to upload file: ${error.message}`);
         //     }
         // });
-        
         
     }
     

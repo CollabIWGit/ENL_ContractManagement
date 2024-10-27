@@ -88,7 +88,27 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       display: flex;
       height: fit-content;
       position: relative;
-  }
+    }
+
+    #loaderOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* Ensure it sits on top of everything */
+      display: none; /* Hidden by default */
+    }
+
+    #loaderOverlay img {
+      width: 100px;
+      height: 100px;
+    }
+
     .left-panel, .right-panel {
         position: fixed;
         transition: width 0.5s ease, margin 0.5s ease;
@@ -284,6 +304,10 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     this.domElement.innerHTML += `
 
       <div class="main-container" id="content">
+
+        <div id="loaderOverlay">
+          <img src="https://enlmu.sharepoint.com/sites/LegalLink/SiteAssets/Images/LoaderSpinner.gif" alt="Loading...">
+        </div>
 
         <div id="nav-placeholder" class="left-panel"></div>
 
@@ -555,7 +579,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Retrieve Request ID
     const urlParams = new URLSearchParams(window.location.search);
     const updateRequestID = urlParams.get('requestid');
-    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Contributors","Party1_agreement").filter(`ID eq ${updateRequestID}`).get();
+    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Contributors","Party1_agreement","AssignedTo").filter(`ID eq ${updateRequestID}`).get();
     console.log(contractDetails);
     // const NameOfAgreement = contractDetails[0].NameOfAgreement;
     let contractStatus = '';
@@ -566,6 +590,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     let party1_agreement = '';
     // let party2_type = '';
     let contributorsArrayInitial = [];
+    let assignedOwner = '';
     // let party2ContributorsArrayInitial = [];
     // const typeOfAgreement = contractDetails[0].TypeOfContract;
     // const otherParties = contractDetails[0].Others_parties;
@@ -609,6 +634,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     }
     //Update Request
     else {
+      assignedOwner = contractDetails[0].AssignedTo;
       // NameOfAgreement = contractDetails[0].NameOfAgreement;
       companyName = contractDetails[0].Company;
       // NameOfRequestor = contractDetails[0].NameOfRequestor;
@@ -621,8 +647,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         contributorsArrayInitial = contractDetails[0].Contributors.split(';').map(email => email.trim());
       }
 
+      console.log('ContractStatus' + contractStatus);
+      console.log('currentRole' + currentRole);
+      console.log('assignedOwner' + assignedOwner);
+      console.log('currentUser' + currentUser);
       //Display Accept or Reject
-      if(currentRole === 'OwnerUpdate' && contractStatus === 'ToBeAccepted'){
+      if((currentRole === 'OwnerUpdate' && contractStatus === 'ToBeAccepted') || (currentRole === 'DespatcherAssign' && contractStatus === 'ToBeAccepted' && assignedOwner === currentUser)){
         console.log('Workings');
         document.getElementById('requestorSubmit').innerHTML = `
           <button id="acceptBtn" class="action-btn">Accept &#10004;</button>
@@ -787,6 +817,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         </div>
       `;
 
+      this.renderRequestDetails(updateRequestID, otherPartiesTable, party2Table);
+
       if(currentRole === 'OwnerUpdate'){
         const form = document.getElementById('despatcher_form');
         const inputs = form.querySelectorAll('input');
@@ -822,7 +854,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     }
 
     //Display Cancel Button
-    if(currentRole === 'RequestorUpdate' || currentRole === 'DespatcherAssign'){
+    if((currentRole === 'RequestorUpdate' || currentRole === 'DespatcherAssign') && !(currentRole === 'DespatcherAssign' && contractStatus === 'ToBeAccepted' && assignedOwner === currentUser)){
       document.getElementById('requestorSubmit').innerHTML += `
         <button id="cancelRequest" type="button">Cancel</button>
       `;
@@ -1008,9 +1040,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           if (firstInvalidElement) {
               firstInvalidElement.focus();
           }
-      } 
+      }
+      else if ($("#requestFor").val() === 'Review of Agreement' && !$("#uploadContract").val()) {
+        alert("Please upload a file.");
+      }
       else {
-        // (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
+        (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
+        document.getElementById("loaderOverlay").style.display = "flex";
 
         //Other Parties table data
         var dataOtherParties = otherPartiesTable.rows().data();
@@ -1076,6 +1112,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
             const isValid = await validateContributorEmails(contributorsArrayCurrent);
             if (!isValid) {
+              (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
               return;
             }
 
@@ -1183,6 +1220,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               }
             }
 
+            document.getElementById("loaderOverlay").style.display = "none";
             alert(`Request ${newRequestID} has been submitted successfully.`);
 
             if(currentRole === 'DespatcherCreate'){
@@ -1210,6 +1248,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
           const isValid = await validateContributorEmails(addContributorArray);
           if (!isValid) {
+            (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
             return;
           }
 
@@ -1244,6 +1283,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               }
             }
 
+            document.getElementById("loaderOverlay").style.display = "none";
             alert(`Request has been updated successfully.`);
           }
           catch (error) {
@@ -1252,6 +1292,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
 
           location.reload();
         }
+        
+        (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
       }
     });
 
@@ -1304,11 +1346,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               validEmails.push(email);
             }
             else {
+              document.getElementById("loaderOverlay").style.display = "none";
               alert(`Invalid email for permissions: ${email}`);
               return false;
             }
           }
           catch (error) {
+            document.getElementById("loaderOverlay").style.display = "none";
             console.error(`Error validating email ${email}:`, error);
             alert(`Error validating email: ${email}`);
             return false;
@@ -1391,8 +1435,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           AssignedTo: $("#assignedTo").val(),
           OwnerEmail: OwnerEmail,
           DueDate: $("#due_date").val(),
-          TypeOfContract: $("#contractType").val(),
-          DespatcherComments: contractTyoe,
+          TypeOfContract: contractTyoe,
+          DespatcherComments: $("#DespatcherComments").val(),
           NameOfAgreement: agreementName,
           ContractStatus: 'ToBeAccepted'
         };
@@ -1726,7 +1770,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
       }
       else if (departments.includes('ExternalOwner')) {
-        return currentRole = 'ExternalOwnerOnly' //External Owner Only -> Disable Submit Button
+        return currentRole = 'ExternalOwnerOnly'; //External Owner Only -> Disable Submit Button
       }
     }
     else if(departments.length === 2){
