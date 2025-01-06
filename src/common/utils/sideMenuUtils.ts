@@ -18,7 +18,7 @@ export class sideMenuUtils {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
    
     <nav id="sidebar">
-      <div style="font-size: 2.5rem; text-align: center; width: 100%; padding: 4rem 0rem; font-weight: 600;">
+      <div style="font-size: 2.5rem; text-align: center; width: 100%; padding: 2rem 0rem; font-weight: 600;">
         <span style="color: white;">Legal</span><span style="color: #ff2738;">Link</span>
       </div>
  
@@ -48,12 +48,19 @@ export class sideMenuUtils {
       <a id="manageUsers"><span class="fas fa-tasks mr-2"></span>Manage Users</a>
      </li>
 
-        <li>
-          <a id="site_contents"><span class="fas fa-tasks mr-2"></span>Site Contents</a>
+         <li>
+          <a id="manageDirectors"><span class="fas fa-tasks mr-2"></span>Manage Directors</a>
         </li>
        
         </ul>
       </li>  
+          <li id="siteContentsNB">
+            <ul>
+              <li>
+                <a id="site_contents"><span class="fas fa-tasks mr-2"></span>Contract Libraries</a>
+              </li>
+            </ul>
+          </li> 
       </ul>
       <div>
         <img id="imgLogo" src="${absoluteUrl}/SiteAssets/Images/ENlnRogersLogo.png" alternate="ENL-logo" style="bottom: 20px; width: 100%; position: absolute;">
@@ -64,9 +71,14 @@ export class sideMenuUtils {
     this.sideMenuNavigation(absoluteUrl);
 
     $('#adminSect').hide();
+    $('#siteContentsNB').hide();
 
     if (departments.includes('Despatcher')){
       $('#adminSect').show();
+    }
+
+    if (departments.includes('InternalOwner')){
+      $('#siteContentsNB').show();
     }
    
   }
@@ -81,11 +93,11 @@ export class sideMenuUtils {
     });
  
     $("#add_company").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/AddToList.aspx/?list=Companies`, true);
+      Navigation.navigate(`${absoluteUrl}/SitePages/AddToList.aspx/?list=Company`, true);
     });
  
     $("#add_service").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/SitePages/AddToList.aspx/?list=ENL_Services`, true);
+      Navigation.navigate(`${absoluteUrl}/SitePages/AddToList.aspx/?list=ENR_Services`, true);
     });
  
     $("#add_typeOfContract").on("click", () => {
@@ -95,14 +107,19 @@ export class sideMenuUtils {
     $("#manageUsers").on("click", () => {
       Navigation.navigate(`${absoluteUrl}/SitePages/AddUser.aspx`, true);
     });
+
+    $("#manageDirectors").on("click", () => {
+      Navigation.navigate(`${absoluteUrl}/SitePages/ManageDirectors.aspx`, true);
+    });
  
     $("#add_contracts").on("click", () => {
       Navigation.navigate(`${absoluteUrl}/SitePages/OnboardActiveContracts.aspx`, true);
     });
 
     $("#site_contents").on("click", () => {
-      Navigation.navigate(`${absoluteUrl}/_layouts/15/viewlsts.aspx?view=14`, true);
+      Navigation.navigate(`${absoluteUrl}/SitePages/Links-Dashboard.aspx`, true);
     });
+ 
  
  
  

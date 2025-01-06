@@ -62,20 +62,46 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
 
   private graphClient: MSGraphClientV3;
 
-  protected onInit(): Promise<void> {
-    currentUser = this.context.pageContext.user.displayName;
-    return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+  // protected onInit(): Promise<void> {
+  //   currentUser = this.context.pageContext.user.displayName;
+  //   return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+  //     sp.setup({
+  //       spfxContext: this.context as any
+  //     });
+
+  //     this.context.msGraphClientFactory
+  //       .getClient('3')
+  //       .then((client: MSGraphClientV3): void => {
+  //         this.graphClient = client;
+  //         resolve();
+  //       }, err => reject(err));
+  //   });
+  // }
+
+  protected async onInit(): Promise<void> {
+    try {
+      // Set current user
+      currentUser = this.context.pageContext.user.displayName;
+  
+      // Initialize PnP JS
       sp.setup({
         spfxContext: this.context as any
       });
-
-      this.context.msGraphClientFactory
-        .getClient('3')
-        .then((client: MSGraphClientV3): void => {
-          this.graphClient = client;
-          resolve();
-        }, err => reject(err));
-    });
+      
+  
+      // Load MS Graph Client
+      this.graphClient = await this.context.msGraphClientFactory.getClient('3');
+  
+      // Ensure jQuery is available globally for DataTables
+      (window as any).$ = (window as any).jQuery = $;
+  
+      // Initialize absolute and base URLs if required
+      absoluteUrl = this.context.pageContext.web.absoluteUrl;
+      baseUrl = this.context.pageContext.site.absoluteUrl;
+    } catch (error) {
+      console.error("Initialization failed:", error);
+      throw error;
+    }
   }
 
   public async render(): Promise<void> {
@@ -86,7 +112,10 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     console.log(requestID);
     const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Party2_agreement","OwnerEmail","Email","ContractStatus").filter(`ID eq ${requestID}`).get();
     const NameOfAgreement = contractDetails[0].NameOfAgreement;
+
     const companyName = contractDetails[0].Company;
+    let companyAccronym = await this.getCompanyAcronymByIdentifier(companyName);
+
     const NameOfRequestor = contractDetails[0].NameOfRequestor;
     const RequestorEmail = contractDetails[0].Email;
     const Owner = contractDetails[0].Owner;
@@ -108,7 +137,7 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     // Get the current date in YYYY-MM-DD format
     const currentDate = new Date().toISOString().split('T')[0];
     console.log(currentDate);
-    const generalFileName = `${currentDate}_${companyName}_${requestID}_${typeOfContract_Acronym}_${party2}`;
+    const generalFileName = `${currentDate}_${companyAccronym}_${requestID}_${typeOfContract_Acronym}_${party2}`;
 
     absoluteUrl = this.context.pageContext.web.absoluteUrl;
     baseUrl = absoluteUrl.split('/sites')[0];
@@ -118,6 +147,25 @@ export default class WorkingAreaWebPart extends BaseClientSideWebPart<IWorkingAr
     //CSS
     this.domElement.innerHTML = `
     <style>
+
+    #loaderOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* Ensure it sits on top of everything */
+      display: none; /* Hidden by default */
+    }
+
+    #loaderOverlay img {
+      width: 100px;
+      height: 100px;
+    }
 
     .container {
       border: 2px solid #dedede;
@@ -398,6 +446,10 @@ legend {
     this.domElement.innerHTML += `
   
         <div class="main-container" id="content">
+
+          <div id="loaderOverlay">
+            <div id="pageLoader" class="${styles.pageLoader}"></div>
+          </div>
   
           <div id="nav-placeholder" class="left-panel"></div>
   
@@ -469,6 +521,8 @@ legend {
         </div>
     `;
 
+    document.getElementById("loaderOverlay").style.display = "flex";
+
     if(requestID){
       document.getElementById('contractStatus').innerText = `${contractStatus}`;
     }
@@ -506,7 +560,7 @@ legend {
     //Generate Side Menu
     SideMenuUtils.buildSideMenu(absoluteUrl, departments);
 
-    this.renderRequestDetails(requestID, companyName);
+    await this.renderRequestDetails(requestID, companyAccronym);
     this.load_comments(requestID);
 
     //Minimize sidebar
@@ -612,7 +666,7 @@ legend {
       const libraryTitle = "Contracts";
       const library = sp.web.lists.getByTitle(libraryTitle);
 
-      const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+      const folder = await library.rootFolder.folders.getByName(companyAccronym).folders.getByName(requestID);
       const files = await folder.files();
 
       var content_add;
@@ -655,9 +709,9 @@ legend {
       if(notRequestor){
         console.log(filename);
 
-        const folderPath = `/sites/LegalLink/${libraryTitle}/${companyName}/${requestID}`;
+        const folderPath = `/sites/LegalLink/${libraryTitle}/${companyAccronym}/${requestID}`;
 
-        await this.addFolderToDocumentLibrary(libraryTitle, companyName, requestID)
+        await this.addFolderToDocumentLibrary(libraryTitle, companyAccronym, requestID)
           .then(async () => {
           try {
             await this.addFileToFolder2(folderPath, filename, content_add, requestID.toString());
@@ -667,7 +721,7 @@ legend {
           }
         });
 
-        this.renderRequestDetails(requestID, companyName);
+        this.renderRequestDetails(requestID, companyAccronym);
         // location.reload();
       }
       else{
@@ -771,7 +825,7 @@ legend {
   
       if (filename) {
         try {
-          const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
+          const folder = await library.rootFolder.folders.getByName(companyAccronym).folders.getByName(requestID);
           const files = await folder.files();
           
           const latestFile = getLatestVersionFile(files);
@@ -794,7 +848,7 @@ legend {
             console.error("Error creating file: ", error);
             alert(`Error creating file: ${error.message}`);
         }
-        this.renderRequestDetails(requestID, companyName);
+        this.renderRequestDetails(requestID, companyAccronym);
         // location.reload();
       } else {
           alert("Filename is required.");
@@ -836,16 +890,51 @@ legend {
       $('#contractsDatatableDiv').show();
 
       const searchBarHTML = `
-        <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" autocomplete="off">
-          <img id="searchButton" src="${absoluteUrl}/SiteAssets/Images/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
-        <div id="searchResults"></div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <!-- Search Bar and Icon Centered -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+              <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <input type="text" id="searchQuery" style="width: 20rem;" placeholder="Search Existing Files in LegalLink" autocomplete="off" />
+                <img id="searchButton" src="${absoluteUrl}/SiteAssets/Images/SearchIcon.png" alt="Search" style="cursor: pointer; height: 30px; width: 30px;" />
+              </div>
+            </div>
+
+            <!-- Checkboxes Aligned Horizontally -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 2rem;">
+              <!-- Include Backup Contracts -->
+              <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="includeLibrary4" name="libraryToggle" style="transform: scale(1.9); margin-right: 0.5rem; accent-color: #f07e12;">
+                <label for="includeLibrary4" class="form-check-label" style="font-family: Poppins, Arial, sans-serif;">
+                  Include Backup Contracts
+                </label>
+              </div>
+
+              <!-- Include Rogers M-Files ENL Scanned Contracts -->
+              <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="includeRogersMF" name="libraryToggle" style="transform: scale(1.9); margin-right: 0.5rem; accent-color: #f07e12;">
+                <label for="includeRogersMF" class="form-check-label" style="font-family: Poppins, Arial, sans-serif;">
+                  Include Rogers M-Files ENL Scanned Contracts
+                </label>
+              </div>
+
+              <!-- ENL - Existing Contracts -->
+              <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="includeExistingENL" name="libraryToggle" style="transform: scale(1.9); margin-right: 0.5rem; accent-color: #f07e12;">
+                <label for="includeExistingENL" class="form-check-label" style="font-family: Poppins, Arial, sans-serif;">
+                  ENL - Existing Contracts
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="searchResults"></div>
       `;
     
       // Append table to container
       $('#sharepointSearch').html(searchBarHTML);
       
       // Bind SharePoint search to image button
-      this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(absoluteUrl, companyName, requestID));
+      this.domElement.querySelector('#searchButton').addEventListener('click', () => this.handleSearch(absoluteUrl, companyAccronym, requestID));
 
       // const useTemplateLoader = document.getElementById('useTemplateLoader');
       // useTemplateLoader.style.display = 'Block';
@@ -916,14 +1005,15 @@ legend {
                   }
                 },
                 {
-                    data: null, className: 'view-col', render: function (data, type, row) {
-                        return `
-                          <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
-                            <img src="${absoluteUrl}/SiteAssets/Images/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
-                          </button>
-                        `;
-                    }
+                  data: null,
+                  className: 'view-col',
+                  render: function (data, type, row) {
+                      return `
+                        <input type="radio" id="selectExistingFileRadio" name="fileSelection" data-url="${row.sourceUrl}" title="Select Document">
+                      `;
+                  }
                 }
+              
             ],
           });
   
@@ -934,43 +1024,45 @@ legend {
             createFloatingIframe(url);
           });
   
-          $('#contractsDatatable').on('click', '#selectExistingFileBtn', async (e) => {
+          $('#contractsDatatable').on('change', 'input[type="radio"][id="selectExistingFileRadio"]', async (e) => {
             const sourceUrl = $(e.currentTarget).data('url');
-
+        
             const filenameInput = await prompt("Enter the filename:");
-
-            if(filenameInput && filenameInput.trim() !== ''){
-              const libraryTitle = "Contracts";
-              const library = sp.web.lists.getByTitle(libraryTitle);
-
-              const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(requestID);
-              const files = await folder.files();
-
-              const latestFile = getLatestVersionFile(files);
-              const nextVersion = latestFile ? getNextVersion(latestFile.Name) : 1;
-  
-              const newFileName = `${generalFileName}_${filenameInput}_V${nextVersion}.docx`;
-
-              console.log(newFileName);
-              // Construct the destination URL dynamically
-              const destinationFolder = `/sites/LegalLink/${libraryName}/${companyName}/${requestID}`;
-              const destinationFileUrl = `${destinationFolder + '/' + newFileName}`;
-
-              // Proceed with your functionality here, e.g., copying the file
-              try {
-                const file = await sp.web.getFileByServerRelativeUrl(sourceUrl).getBuffer();
-                await sp.web.getFolderByServerRelativeUrl(destinationFolder).files.add(destinationFileUrl, file, true);
-                console.log('File copied successfully.');
-                alert('File copied successfully.');
-              } catch (error) {
-                console.error('Error copying file: ', error);
-                alert('Error copying file.');
-              }
+        
+            if (filenameInput && filenameInput.trim() !== '') {
+                const libraryTitle = "Contracts";
+                const library = sp.web.lists.getByTitle(libraryTitle);
+        
+                try {
+                    const folder = await library.rootFolder.folders.getByName(companyAccronym).folders.getByName(requestID);
+                    const files = await folder.files();
+        
+                    const latestFile = getLatestVersionFile(files);
+                    const nextVersion = latestFile ? getNextVersion(latestFile.Name) : 1;
+        
+                    const newFileName = `${generalFileName}_${filenameInput}_V${nextVersion}.docx`;
+        
+                    console.log(newFileName);
+        
+                    // Construct the destination URL dynamically
+                    const destinationFolder = `/sites/LegalLink/${libraryName}/${companyAccronym}/${requestID}`;
+                    const destinationFileUrl = `${destinationFolder + '/' + newFileName}`;
+        
+                    // Proceed with your functionality here, e.g., copying the file
+                    const file = await sp.web.getFileByServerRelativeUrl(sourceUrl).getBuffer();
+                    await sp.web.getFolderByServerRelativeUrl(destinationFolder).files.add(destinationFileUrl, file, true);
+        
+                    console.log('File copied successfully.');
+                    alert('File copied successfully.');
+                } catch (error) {
+                    console.error('Error copying file: ', error);
+                    alert('Error copying file.');
+                }
+            } else {
+                alert('Filename is required.');
             }
-            else{
-              alert('Filename is required.');
-            }
-          });
+        });
+        
 
           // $("#searchButton").click(async (e) => {
           //   await this.useExistingContractsSearch(companyName, requestID);
@@ -1032,6 +1124,8 @@ legend {
         }
     });
 
+    document.getElementById("loaderOverlay").style.display = "none";
+
   }
 
   private async handleSearch(absoluteUrl, companyName, requestID): Promise<void> {
@@ -1047,37 +1141,116 @@ legend {
 
   private async searchLibrary(siteUrl: string, query: string, libraryName: string): Promise<Array<{ Title: string, CreatedDate: string, ModifiedDate: string, sourceUrl: string, documentUrl: string}>> {
 
-    const libraryPath = `/sites/LegalLink/${libraryName}`;
+    const pathLibraryContracts = `/sites/LegalLink/Contracts`;
+    const pathLibraryBackupContracts = `/sites/LegalLink/Backup Contracts`;
+    const pathLibraryExistingContracts = `/sites/LegalLink/ENLExisting Contracts`;
+    const pathLibraryRogersMFContracts = `/sites/LegalLink/Rogers MFiles Contracts`;
 
     //wildcard
-    const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&sourceid='%7B368B4FE5-EB91-4554-9225-3AAABD3FF41E%7D'`;
+    // const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&sourceid='%7B368B4FE5-EB91-4554-9225-3AAABD3FF41E%7D'`;
+    // const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query+"*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'`;
 
-    const response = await this.context.spHttpClient.get(searchQueryUrl, SPHttpClient.configurations.v1);
-    const jsonResponse = await response.json();
-    console.log("JSON", jsonResponse);
+    // const response = await this.context.spHttpClient.get(searchQueryUrl, SPHttpClient.configurations.v1);
+    // const jsonResponse = await response.json();
+    // console.log("JSON", jsonResponse);
 
-    if (!response.ok) {
-      throw new Error('Error fetching search results');
+    // if (!response.ok) {
+    //   throw new Error('Error fetching search results');
+    // }
+
+    // const results = jsonResponse.PrimaryQueryResult.RelevantResults.Table.Rows.map(row => {
+    //   const title = row.Cells.find(cell => cell.Key === 'Title').Value;
+    //   const fileExtension = row.Cells.find(cell => cell.Key === 'FileExtension').Value;
+    //   const fileName = `${title}.${fileExtension}`;
+    //   const path = row.Cells.find(cell => cell.Key === 'Path').Value;
+    //   const created = row.Cells.find(cell => cell.Key === 'CreatedOWSDate').Value;
+    //   const createdBy = row.Cells.find(cell => cell.Key === 'CreatedBy').Value;
+    //   const lastModified = row.Cells.find(cell => cell.Key === 'ModifiedOWSDATE').Value;
+    //   const modifiedBy = row.Cells.find(cell => cell.Key === 'ModifiedBy').Value;
+    //   const sourceUrl = this.getRelativeUrl(path);
+    //   let documentUrl = `${siteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${sourceUrl}&action=default`;
+    //   if(fileExtension == 'pdf'){
+    //     documentUrl = path;
+    //   }
+    //   return { Title: fileName, CreatedDate: created, ModifiedDate: lastModified, sourceUrl: sourceUrl, documentUrl: documentUrl};
+    // });
+
+    const batchSize = 50; // Number of results per batch
+    let startRow = 0; // Starting index for results
+    let allResults = []; // Array to store all results
+
+    while (true) {
+      // Construct the query URL with rowlimit and startrow
+      const searchQueryUrl = `${absoluteUrl}/_api/search/query?querytext='${query + "*"}'&selectproperties='Title,Path,FileExtension,CreatedOWSDate,CreatedBy,ModifiedOWSDATE,ModifiedBy'&rowlimit=${batchSize}&startrow=${startRow}`;
+
+      // Fetch the results
+      const response = await this.context.spHttpClient.get(searchQueryUrl, SPHttpClient.configurations.v1);
+      const jsonResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Error fetching search results');
+      }
+
+      // Parse the results
+      const batchResults = jsonResponse.PrimaryQueryResult.RelevantResults.Table.Rows.map(row => {
+        const title = row.Cells.find(cell => cell.Key === 'Title').Value;
+        const fileExtension = row.Cells.find(cell => cell.Key === 'FileExtension').Value;
+        const fileName = `${title}.${fileExtension}`;
+        const path = row.Cells.find(cell => cell.Key === 'Path').Value;
+        const created = row.Cells.find(cell => cell.Key === 'CreatedOWSDate').Value;
+        const createdBy = row.Cells.find(cell => cell.Key === 'CreatedBy').Value;
+        const lastModified = row.Cells.find(cell => cell.Key === 'ModifiedOWSDATE').Value;
+        const modifiedBy = row.Cells.find(cell => cell.Key === 'ModifiedBy').Value;
+        const sourceUrl = this.getRelativeUrl(path);
+        let documentUrl = `${siteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${sourceUrl}&action=default`;
+        if (fileExtension === 'pdf') {
+          documentUrl = path;
+        }
+        return { Title: fileName, CreatedDate: created, ModifiedDate: lastModified, sourceUrl: sourceUrl, documentUrl: documentUrl };
+      });
+
+      // Add batch results to the main array
+      allResults = allResults.concat(batchResults);
+
+      // Check if we've retrieved all results
+      if (batchResults.length < batchSize) break;
+
+      // Increment startRow for the next batch
+      startRow += batchSize;
     }
 
-    const results = jsonResponse.PrimaryQueryResult.RelevantResults.Table.Rows.map(row => {
-      const title = row.Cells.find(cell => cell.Key === 'Title').Value;
-      const fileExtension = row.Cells.find(cell => cell.Key === 'FileExtension').Value;
-      const fileName = `${title}.${fileExtension}`;
-      const path = row.Cells.find(cell => cell.Key === 'Path').Value;
-      const created = row.Cells.find(cell => cell.Key === 'CreatedOWSDate').Value;
-      const createdBy = row.Cells.find(cell => cell.Key === 'CreatedBy').Value;
-      const lastModified = row.Cells.find(cell => cell.Key === 'ModifiedOWSDATE').Value;
-      const modifiedBy = row.Cells.find(cell => cell.Key === 'ModifiedBy').Value;
-      const sourceUrl = this.getRelativeUrl(path);
-      let documentUrl = `${siteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${sourceUrl}&action=default`;
-      if(fileExtension == 'pdf'){
-        documentUrl = path;
-      }
-      return { Title: fileName, CreatedDate: created, ModifiedDate: lastModified, sourceUrl: sourceUrl, documentUrl: documentUrl};
-    });
+    // Log all results
+    console.log("All Results:", allResults);
 
-    const filteredResults = results.filter(result => result.sourceUrl.includes(libraryPath));
+    const includeLibraryBackupContracts = document.getElementById('includeLibrary4') as HTMLInputElement;
+    const includeLibraryExistingContracts = document.getElementById('includeExistingENL') as HTMLInputElement;
+    const includeLibraryRogersMFContracts = document.getElementById('includeRogersMF') as HTMLInputElement;
+
+    let filteredResults: Array<{ Title: string, CreatedDate: string, ModifiedDate: string, sourceUrl: string, documentUrl: string }> = [];
+
+    const activePaths: string[] = [pathLibraryContracts]; // Default path
+
+    if (includeLibraryBackupContracts.checked) {
+      console.log('Checkbox Backup Contracts checked');
+      activePaths.push(pathLibraryBackupContracts);
+    }
+    
+    if (includeLibraryExistingContracts.checked) {
+      console.log('Checkbox Existing Contracts checked');
+      activePaths.push(pathLibraryExistingContracts);
+    }
+    
+    if (includeLibraryRogersMFContracts.checked) {
+      console.log('Checkbox Rogers MFiles Contracts checked');
+      activePaths.push(pathLibraryRogersMFContracts);
+    }
+    
+    // Filter results based on active paths
+    filteredResults = allResults.filter(result =>
+      activePaths.some(path => result.sourceUrl.includes(path))
+    );
+
+    console.log('Filtered Results', filteredResults);
 
     return filteredResults;
   }
@@ -1086,17 +1259,32 @@ legend {
     console.log(results);
     $('#contractsDatatable tbody').empty();
 
-    const formattedResults = results.map(item => ({
-      Company: companyName,
-      Contract: requestID,
-      DocumentName: item.Title,
-      Created: this.formatDateToUK(item.CreatedDate),
-      // CreatedBy: item.CreatedBy,
-      Modified: this.formatDateToUK(item.ModifiedDate),
-      // ModifiedBy: item.ModifiedBy,
-      DocumentUrl: item.documentUrl,
-      sourceUrl: item.sourceUrl
-    }));
+    const formattedResults = results.map(item => {
+      // Check if the documentUrl includes "Library 4"
+      const company = (item.documentUrl.includes('Backup Contracts') || 
+                 item.documentUrl.includes('Rogers MFiles Contracts') || 
+                 item.documentUrl.includes('ENLExisting Contracts')) 
+                ? '' 
+                : companyName;
+
+      const reqID = (item.documentUrl.includes('Backup Contracts') || 
+                    item.documentUrl.includes('Rogers MFiles Contracts') || 
+                    item.documentUrl.includes('ENLExisting Contracts')) 
+                    ? '' 
+                    : requestID;
+    
+      return {
+        Company: company,
+        Contract: reqID,
+        DocumentName: item.Title,
+        Created: this.formatDateToUK(item.CreatedDate),
+        // CreatedBy: item.CreatedBy,
+        Modified: this.formatDateToUK(item.ModifiedDate),
+        // ModifiedBy: item.ModifiedBy,
+        DocumentUrl: item.documentUrl,
+        sourceUrl: item.sourceUrl
+      };
+    });
 
     console.log('Formatted results:', formattedResults);
 
@@ -1124,7 +1312,7 @@ legend {
             data: null, className: 'view-col', render: function (data, type, row) {
                 return `
                   <button id="selectExistingFileBtn" data-url="${row.sourceUrl}" title="Select Document" class="${styles.datatableBtn}">
-                    <img src="${absoluteUrl}/SiteAssets/Images/SelectDocumentIcon.png" class="${styles.datatableBtnImg}">
+                    <img src="${absoluteUrl}/SiteAssets/Images/CreateTemplate.png" class="${styles.datatableBtnImg}">
                   </button>
                 `;
             }
@@ -1234,50 +1422,63 @@ legend {
 
   }
 
-  public async fetchDocumentsFromLibrary(siteUrl, libraryName) {
-    const endpoint = `${siteUrl}/_api/web/lists/getbytitle('${libraryName}')/items?$expand=File&$select=ID,File/Name,File/ServerRelativeUrl,File/Title,Modified,Created&$top=500`;
-
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json;odata=verbose',
-      },
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error fetching documents: ${response.statusText}`);
+  public async fetchDocumentsFromLibrary(siteUrl: string, libraryName: string): Promise<any[]> {
+    let endpoint = `${siteUrl}/_api/web/lists/getbytitle('${libraryName}')/items?$expand=File&$select=ID,File/Name,File/ServerRelativeUrl,File/Title,Modified,Created&$top=500`;
+    const allDocuments: any[] = [];
+  
+    try {
+      while (endpoint) {
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json;odata=verbose',
+          },
+          credentials: 'include',
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Error fetching documents: ${response.statusText}`);
+        }
+  
+        const data = await response.json();
+        const documents = data.d.results.filter(item => item.File);
+  
+        allDocuments.push(
+          ...documents.map(item => {
+            if (item.File && item.File.Name && item.File.ServerRelativeUrl) {
+              const sourceUrl = item.File.ServerRelativeUrl;
+              const fileUrlParts = item.File.ServerRelativeUrl.split('/');
+              const companyFolder = fileUrlParts[fileUrlParts.length - 3];
+              const contractFolder = fileUrlParts[fileUrlParts.length - 2];
+              const redirectUrl = `${siteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${item.File.ServerRelativeUrl}&action=default`;
+  
+              return {
+                Company: companyFolder,
+                Contract: contractFolder,
+                DocumentName: item.File.Name,
+                Created: this.formatDateToUK(item.Created),
+                Modified: this.formatDateToUK(item.Modified),
+                DocumentUrl: redirectUrl,
+                sourceUrl: sourceUrl,
+              };
+            } else {
+              // Skip folders or invalid entries
+              return null;
+            }
+          }).filter(Boolean)
+        );
+  
+        // Update endpoint with the next page link, if available
+        endpoint = data.d.__next || null; // If no more pages, endpoint becomes null
+      }
+  
+      return allDocuments;
+    } catch (error) {
+      console.error('Error fetching documents from library:', error);
+      return [];
     }
-
-    const data = await response.json();
-    console.log("Here", data);
-    const contractFiles = data.d.results.filter(item => item.File);
-
-    return contractFiles.map(item => {
-      if (item.File && item.File.Name && item.File.ServerRelativeUrl) {
-        const sourceUrl = item.File.ServerRelativeUrl;
-        const fileUrlParts = item.File.ServerRelativeUrl.split('/');
-        const companyFolder = fileUrlParts[fileUrlParts.length - 3];
-        const contractFolder = fileUrlParts[fileUrlParts.length - 2];
-        const redirectUrl = `${siteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${item.File.ServerRelativeUrl}&action=default`;
-
-        return {
-          Company: companyFolder,
-          Contract: contractFolder,
-          DocumentName: item.File.Name,
-          Created: this.formatDateToUK(item.Created),
-          Modified: this.formatDateToUK(item.Modified),
-          DocumentUrl: redirectUrl,
-          sourceUrl: sourceUrl
-        };
-      }
-      else {
-        // console.warn('Skipping folder:', item);
-        return null;
-      }
-    }).filter(Boolean);
-
   }
+  
 
   public formatDateToUK(dateString: string): string {
     const date = new Date(dateString);
@@ -1632,6 +1833,12 @@ legend {
       console.log(error);
       return null;
     }
+  }
+
+  public async getCompanyAcronymByIdentifier(identifier: string): Promise<string | null> {
+    const companies = await sp.web.lists.getByTitle('Company').items.getAll();
+    const company = companies.find(item => item.field_1 === identifier);
+    return company ? company.Title : null;
   }
 
   protected get dataVersion(): Version {

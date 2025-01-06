@@ -19,7 +19,7 @@ import {
     SPHttpClientResponse
 } from '@microsoft/sp-http';
 
-
+import * as sharepointConfig from '../../common/sharepoint-config.json';
 import { sideMenuUtils } from "../../common/utils/sideMenuUtils";
 let SideMenuUtils = new sideMenuUtils();
 let departments = [];
@@ -48,20 +48,46 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
     private graphClient: MSGraphClientV3;
 
 
-    protected onInit(): Promise<void> {
-        currentUser = this.context.pageContext.user.displayName;
-        return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+    // protected onInit(): Promise<void> {
+    //     currentUser = this.context.pageContext.user.displayName;
+    //     return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+    //       sp.setup({
+    //         spfxContext: this.context as any
+    //       });
+     
+    //       this.context.msGraphClientFactory
+    //       .getClient('3')
+    //       .then((client: MSGraphClientV3): void => {
+    //         this.graphClient = client;
+    //         resolve();
+    //       }, err => reject(err));
+    //     });
+    //   }
+
+    protected async onInit(): Promise<void> {
+        try {
+          // Set current user
+          currentUser = this.context.pageContext.user.displayName;
+      
+          // Initialize PnP JS
           sp.setup({
             spfxContext: this.context as any
           });
-     
-          this.context.msGraphClientFactory
-          .getClient('3')
-          .then((client: MSGraphClientV3): void => {
-            this.graphClient = client;
-            resolve();
-          }, err => reject(err));
-        });
+          
+      
+          // Load MS Graph Client
+          this.graphClient = await this.context.msGraphClientFactory.getClient('3');
+      
+          // Ensure jQuery is available globally for DataTables
+          (window as any).$ = (window as any).jQuery = $;
+      
+          // Initialize absolute and base URLs if required
+          absoluteUrl = this.context.pageContext.web.absoluteUrl;
+          baseUrl = this.context.pageContext.site.absoluteUrl;
+        } catch (error) {
+          console.error("Initialization failed:", error);
+          throw error;
+        }
       }
 
     public async render(): Promise<void> {
@@ -72,6 +98,25 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                     display: flex;
                     height: fit-content;
                     position: relative;
+                }
+
+                #loaderOverlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999; /* Ensure it sits on top of everything */
+                    display: none; /* Hidden by default */
+                }
+
+                #loaderOverlay img {
+                    width: 100px;
+                    height: 100px;
                 }
                 .left-panel, .right-panel {
                     position: fixed;
@@ -166,6 +211,10 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
             <div class="main-container" id="content">
 
+                <div id="loaderOverlay">
+                    <div id="pageLoader" class="${styles.pageLoader}"></div>
+                </div>
+
                 <div id="nav-placeholder" class="left-panel"></div>
 
                 <div id="middle-panel" class="middle-panel">
@@ -186,7 +235,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                             title="Naming convention applies"
                                         >Name of Contract*
                                         </label>
-                                        <input type="text" id="contract_name" required autocomplete="off">
+                                        <input type="text" id="contract_name" required readonly autocomplete="off">
                                     </div>
                                 </div>
 
@@ -215,102 +264,44 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                                     </div>
                                 </div>
 
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p> </p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p style="margin-bottom: 0px;">Name of Party*</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p 
-                                            title="Name of person within client company responsible for this contract and who will receive alerts related to this contract."
-                                        style="margin-bottom: 0px;">Name of person responsible</p>
+                                <div class="${styles.grid}" style="width: 100%; display: flex;">
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="${styles.controls}">
+                                            <div style="position: relative;">
+                                            <label for="other_parties" 
+                                                title="If there are more than 2 parties to the agreement, add the remaining parties using the +"
+                                            >Other Parties*</label>
+                                            <input type="text" list='companies_folder' id="other_parties" autocomplete="off">
+                                            <datalist id="companies_folder"></datalist>
+                                            <button class="${styles.addPartiesButton}" id="addOtherParties">+ Add Party</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p>Party 1 (ENL-Rogers side)*</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" placeholder="Please select.." id="partyENL_Rogers_name" list='companies_folder' required autocomplete="off">
-                                        <datalist id="companies_folder"></datalist>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="partyENL_Rogers_person" required autocomplete="off">
-                                    </div>
-                                </div>
-
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p>Party 2*</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party2_name" required autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party2_person" required autocomplete="off">
-                                    </div>
-                                </div>
-
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p>Party 3</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party3_name" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party3_person" autocomplete="off">
-                                    </div>
-                                </div>
-
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p>Party 4</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party4_name" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party4_person" autocomplete="off">
-                                    </div>
-                                </div>
-
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <p>Party 5</p>
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party5_name" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="${styles['col-1-3']}">
-                                    <div class="${styles.controls}">
-                                        <input type="text" id="party5_person" autocomplete="off">
+                                <div class="${styles.grid}">
+                                    <div class="${styles['col-1-2']}">
+                                        <div class="w3-container">
+                                            <div>
+                                            <div id="tblOtherParties" class="table-responsive-xl">
+                                                <div class="form-row">
+                                                <div class="col-xl-12">
+                                                    <div id="other_parties_tbl">
+                                                    <table id='tbl_other_Parties' class='table table-striped' style="margin-bottom: 1rem;">
+                                                        <thead>
+                                                        <tr>
+                                                            <th class=" text-left">Other Party</th>
+                                                            <th class="text-center"></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="tb_otherParties"></tbody>
+                                                    </table>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -655,7 +646,11 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
             </div>
         `;
 
+        document.getElementById("loaderOverlay").style.display = "flex";
+
         //<input type="file" id="fileUpload" accept=".pdf,.doc,.docx" />    Upload file to be sent for signature
+
+        await this.checkCurrentUsersGroupAsync();
 
         absoluteUrl = this.context.pageContext.web.absoluteUrl;
         baseUrl = absoluteUrl.split('/sites')[0];
@@ -684,6 +679,17 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Party2_agreement","OwnerEmail","Email","ContractStatus").filter(`ID eq ${updateRequestID}`).get();
         const contractStatus = contractDetails[0].ContractStatus;
 
+        console.log('Details:', contractDetails);
+
+        var otherPartiesTable = $('#tbl_other_Parties').DataTable({
+            info: false,
+            // responsive: true,
+            pageLength: 5,
+            ordering: false,
+            paging: false,
+            searching: false,
+        });
+
         //Disable if cancelled
         if(contractStatus === 'Cancelled'){
             const formElements = this.domElement.querySelectorAll('input, select, textarea, button');
@@ -700,7 +706,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
         require('./ContractForm');
 
-        const docForSignature = this.renderRequestDetails(parseInt(updateRequestID));
+        await this.renderRequestDetails(parseInt(updateRequestID), otherPartiesTable);
 
         $('#minimizeButton').on('click', function() {
 
@@ -725,6 +731,8 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
         document.getElementById("contract_details_form").addEventListener("submit", async (event) => {
             event.preventDefault(); // Prevent the default form submission
+
+            document.getElementById("loaderOverlay").style.display = "flex";
         
             const form = event.target as HTMLFormElement;
         
@@ -737,6 +745,25 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                     firstInvalidElement.focus();
                 }
             } 
+
+            var dataOtherParties = otherPartiesTable.rows().data();
+            var allOtherParties = "";
+            var rowCountOtherParties = dataOtherParties.length;
+            var otherPartiesValidationArray: string[] = [];
+
+            dataOtherParties.each(function (value, index) {
+                var partyName = value[0];
+                allOtherParties += partyName;
+                if (index < rowCountOtherParties - 1) {
+                    allOtherParties += ";";
+                }
+                otherPartiesValidationArray.push(partyName);
+            });
+
+            if (otherPartiesValidationArray.length === 0){
+                alert("At least 1 Other Party is required.");
+                return;
+            }
             else {
 
                 (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
@@ -804,21 +831,21 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 const currentDateUK = this.getCurrentDateUKFormat();
 
                 //Form data
-                var data = {
-                    NameOfContract: $("#contract_name").val(),
+                var dataCD = {
+                    // NameOfContract: $("#contract_name").val(),
                     InternalReferenceNumber: $("#internal_ref_num").val(),
-                    Status: $("#contractStatus").val(),
+                    // Status: $("#contractStatus").val(),
                     Party_ENL_Rogers_Name: $("#partyENL_Rogers_name").val(),
                     Party_ENL_Rogers_Person: $("#partyENL_Rogers_person").val(),
-                    Party2_Name: $("#party2_name").val(),
-                    Party2_Person: $("#party2_person").val(),
-                    Party3_Name: $("#party3_name").val(),
-                    Party3_Person: $("#party3_person").val(),
-                    Party4_Name: $("#party4_name").val(),
-                    Party4_Person: $("#party4_person").val(),
-                    Party5_Name: $("#party5_name").val(),
-                    Party5_Person: $("#party5_person").val(),
-                    TypeOfContract: $("#contractType").val(),
+                    // Party2_Name: $("#party2_name").val(),
+                    // Party2_Person: $("#party2_person").val(),
+                    // Party3_Name: $("#party3_name").val(),
+                    // Party3_Person: $("#party3_person").val(),
+                    // Party4_Name: $("#party4_name").val(),
+                    // Party4_Person: $("#party4_person").val(),
+                    // Party5_Name: $("#party5_name").val(),
+                    // Party5_Person: $("#party5_person").val(),
+                    // TypeOfContract: $("#contractType").val(),
                     ValueOfContract: contractValue,
                     ApprovedBy: $("#approvedBy").val(),
 
@@ -851,8 +878,37 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                     LastUpdatedOn: currentDateUK,
                     LastUpdatedBy: currentUserName
                 };
+                console.log(dataCD);
 
-                console.log(data);
+                //Other Parties table data
+                // var dataOtherParties = otherPartiesTable.rows().data();
+                // var allOtherParties = "";
+                // var rowCountOtherParties = dataOtherParties.length;
+                // var otherPartiesPermissionsArray = [];
+                // var otherPartiesValidationArray = [];
+
+                // let companyNameVal = $("#enl_company").val();
+                // let party1Agreement = $("#party1").val();
+                // otherPartiesPermissionsArray.push(companyNameVal);
+                // otherPartiesPermissionsArray.push(party1Agreement);
+
+                // dataOtherParties.each(function (value, index) {
+                //     var partyName = value[0];
+                //     allOtherParties += partyName;
+                //     if (index < rowCountOtherParties - 1) {
+                //         allOtherParties += ";";
+                //     }
+                //     otherPartiesPermissionsArray.push(partyName);
+                //     otherPartiesValidationArray.push(partyName);
+                // });
+
+                var dataCR = {
+                    NameOfAgreement: $("#contract_name").val(),
+                    ContractStatus: $("#contractStatus").val(),
+                    TypeOfContract: $("#contractType").val(),
+                    Others_parties: allOtherParties,
+                }
+                console.log(dataCR);
 
                 try {
                     // Get the list item where Request_ID equals updateRequestID
@@ -864,8 +920,12 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                         console.log(itemId);
             
                         // Update the item with the new data
-                        await sp.web.lists.getByTitle("Contract_Details").items.getById(itemId).update(data);
-                        console.log(`Item with Request_ID ${updateRequestID} updated successfully.`);
+                        await sp.web.lists.getByTitle("Contract_Details").items.getById(itemId).update(dataCD);
+                        console.log(`Item CD with Request_ID ${updateRequestID} updated successfully.`);
+
+                        await sp.web.lists.getByTitle("Contract_Request").items.getById(parseInt(updateRequestID)).update(dataCR);
+                        console.log(`Item CR with Request_ID ${updateRequestID} updated successfully.`);
+
                         alert("Contract has been updated successfully.");
                     } else {
                         console.log(`No item found with Request_ID ${updateRequestID}.`);
@@ -879,6 +939,8 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
                 (document.getElementById('saveToList') as HTMLButtonElement).disabled = false;
             }
+
+            document.getElementById("loaderOverlay").style.display = "none";
         });
 
         // $('#sendForSignature').on('click', async () => {
@@ -947,7 +1009,8 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 formData.append("File", blob, fileName);
             
                 // Upload the file to Adobe Sign via the local proxy
-                const uploadResponse = await fetch('https://proxytestiw-frci5.msappproxy.net/api/proxy/adobeSign', {
+                // const uploadResponse = await fetch('https://proxytestiw-frci5.msappproxy.net/api/proxy/adobeSign', {
+                const uploadResponse = await fetch('http://197.227.97.74:988/api/proxy/adobeSign', {
                     method: 'POST',
                     body: formData
                 });
@@ -968,6 +1031,25 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 console.error('Error uploading file to Adobe Sign:', error);
             }
         });
+
+        document.querySelector('#addOtherParties').addEventListener('click', (event) => {
+            event.preventDefault();
+            console.log('Remove parties working');
+            const otherPartyValue = $("#other_parties").val();
+          
+            if (otherPartyValue === "") {
+              alert("Please enter a value");
+            } else {
+              this.addNewOtherPartiesRow(otherPartiesTable, otherPartyValue);
+            }
+        });
+
+        $('#tbl_other_Parties tbody').on('click', '.delete-row', function (event) {
+            event.preventDefault();
+            otherPartiesTable.row($(this).closest('tr')).remove().draw(false);
+          });
+
+        document.getElementById("loaderOverlay").style.display = "none";
         
         // $('#sendForSignature').on('click', async () => {
         //     // Check if a file is selected by the user
@@ -1010,30 +1092,31 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
         
     }
     
-    private async renderRequestDetails(id: any) {
+    private async renderRequestDetails(id: any, otherPartiesTable) {
 
         try {
             // Retrieve the item from the SharePoint list where req_ID matches the provided ID
-            const items = await sp.web.lists.getByTitle("Contract_Details").items.filter(`Request_ID eq ${id}`).get();
+            const cd_items = await sp.web.lists.getByTitle("Contract_Details").items.filter(`Request_ID eq ${id}`).get();
+            const cr_items = await sp.web.lists.getByTitle("Contract_Request").items.filter(`ID eq ${id}`).get();
     
-            if (items.length > 0) {
-                const item = items[0];
-                console.log('Retrieved', item);
+            if (cd_items.length > 0) {
+                const item = cd_items[0];
+                console.log('Retrieved cd', item);
     
-                $("#contract_name").val(item.NameOfContract);
+                // $("#contract_name").val(item.NameOfContract);
                 $("#internal_ref_num").val(item.InternalReferenceNumber);
-                $("#contractStatus").val(item.Status);
-                $("#partyENL_Rogers_name").val(item.Party_ENL_Rogers_Name);
-                $("#partyENL_Rogers_person").val(item.Party_ENL_Rogers_Person);
-                $("#party2_name").val(item.Party2_Name);
-                $("#party2_person").val(item.Party2_Person);
-                $("#party3_name").val(item.Party3_Name);
-                $("#party3_person").val(item.Party3_Person);
-                $("#party4_name").val(item.Party4_Name);
-                $("#party4_person").val(item.Party4_Person);
-                $("#party5_name").val(item.Party5_Name);
-                $("#party5_person").val(item.Party5_Person);
-                $("#contractType").val(item.TypeOfContract);
+                // $("#contractStatus").val(item.Status);
+                // $("#partyENL_Rogers_name").val(item.Party_ENL_Rogers_Name);
+                // $("#partyENL_Rogers_person").val(item.Party_ENL_Rogers_Person);
+                // $("#party2_name").val(item.Party2_Name);
+                // $("#party2_person").val(item.Party2_Person);
+                // $("#party3_name").val(item.Party3_Name);
+                // $("#party3_person").val(item.Party3_Person);
+                // $("#party4_name").val(item.Party4_Name);
+                // $("#party4_person").val(item.Party4_Person);
+                // $("#party5_name").val(item.Party5_Name);
+                // $("#party5_person").val(item.Party5_Person);
+                // $("#contractType").val(item.TypeOfContract);
 
                 const contractValue = item.ValueOfContract;
                 if (contractValue) {
@@ -1132,10 +1215,43 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
                 $("#lastUpdatedOn").val(item.LastUpdatedOn);
                 $("#lastUpdatedBy").val(item.LastUpdatedBy);
     
-                console.log(`Form populated with data from item with req_ID ${id}.`);
+                console.log(`Form populated with data from contract details with req_ID ${id}.`);
             } else {
                 console.log(`No item found with req_ID ${id}.`);
             }
+
+            if (cr_items.length > 0) {
+                const item = cr_items[0];
+                console.log('Retrieved cr', item);
+    
+                $("#contract_name").val(item.NameOfAgreement);
+                $("#contractStatus").val(item.ContractStatus);
+                $("#contractType").val(item.TypeOfContract);
+                if (item.Others_parties !== null && item.Others_parties !== "") {
+                    var othersPartiesVal = item.Others_parties;
+                    othersPartiesVal = othersPartiesVal.replace(/;+$/, '');
+                    var otherPartiesArray = othersPartiesVal.split(';');
+                    // var tbodyOtherParties = document.getElementById('tb_otherParties');
+                    // tbodyOtherParties.innerHTML = '';
+                    otherPartiesTable.clear().draw();
+                    
+                    console.log('Other parties render:', otherPartiesArray);
+
+                    otherPartiesArray.forEach(function (value) {
+                        otherPartiesTable.row.add([
+                        value,
+                        '<button class="delete-row" style="background: none; padding: 0px;">&#10060;</button>'
+                        ]).draw(false);
+                    });
+                }
+
+
+                console.log(`Form populated with data from contract request with req_ID ${id}.`);
+            } else {
+                console.log(`No item found with ID ${id}.`);
+            }
+
+
         } catch (error) {
             console.error('Error retrieving item:', error);
         }
@@ -1226,19 +1342,32 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
 
     }
 
+    addNewOtherPartiesRow(table, party) {
+        
+        table.row.add([
+          party,
+          '<button class="delete-row" style="background: none; padding: 0px;">&#10060;</button>'
+        ]).draw(false);
+      
+        $("#other_parties").val("");
+    }
+
     public async load_companies() {
         const drp_companies = document.getElementById("companies_folder") as HTMLSelectElement;
         if (!drp_companies) {
-            console.error("Dropdown element not found");
-            return;
+          console.error("Dropdown element not found");
+          return;
         }
-        const companies = await sp.web.lists.getByTitle('Companies').items.get();
-
-        await Promise.all(companies.map(async (result) => {
-            const opt = document.createElement('option');
-            opt.value = result.Title;
-            drp_companies.appendChild(opt);
-        }));
+        // Fetch companies and sort alphabetically by field_1
+        const companies = await sp.web.lists.getByTitle('Company').items.getAll();
+        const sortedCompanies = companies.sort((a, b) => a.field_1.localeCompare(b.field_1));
+    
+        // Map sorted companies to dropdown options
+        sortedCompanies.forEach(result => {
+          const opt = document.createElement('option');
+          opt.value = result.field_1; // Set the option's value to field_1
+          drp_companies.appendChild(opt);
+        });
     }
 
     public async load_contractType() {
@@ -1251,7 +1380,7 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
     
         await Promise.all(contractType.map(async (result) => {
             const opt = document.createElement('option');
-            opt.value = result.Title;
+            opt.value = result.Identifier;
             drp_contractType.appendChild(opt);
         }));
     }
@@ -1284,6 +1413,75 @@ export default class ContractFormWebPart extends BaseClientSideWebPart<IContract
             console.log(error);
             return null;
         }
+    }
+
+    public async checkCurrentUsersGroupAsync() {
+        // var currentRole;
+        let groupList = await sp.web.currentUser.groups();
+        console.log('grouplist: ', groupList);
+      
+        // const urlParams = new URLSearchParams(window.location.search);
+        // const updateRequestID = urlParams.get('requestid');
+        
+        if (groupList.filter(g => g.Title == sharepointConfig.Groups.Requestor).length == 1) {
+          departments.push("Requestor");
+        }
+        if (groupList.filter(g => g.Title == sharepointConfig.Groups.InternalOwner).length == 1) {
+          departments.push("InternalOwner");
+        }
+        if (groupList.filter(g => g.Title == sharepointConfig.Groups.ExternalOwner).length == 1) {
+          departments.push("ExternalOwner");
+        }
+        if (groupList.filter(g => g.Title == sharepointConfig.Groups.Despatcher).length == 1) {
+          departments.push("Despatcher");
+        }
+        if (groupList.filter(g => g.Title == sharepointConfig.Groups.DirectorsView).length == 1) {
+          departments.push("DirectorsView");
+        }
+    
+        console.log(departments);
+    
+        // if (departments.length === 0) {
+        //   departments.push("noGroup");
+        // }
+        // else if(departments.length === 1) {
+        //   if (departments.includes('Requestor')) {
+        //     if (!updateRequestID){
+        //       return currentRole = 'RequestorCreate'; //New Request
+        //     }
+        //     else{
+        //       return currentRole = 'RequestorUpdate'; //Update Request
+        //     }
+        //   }
+        //   else if (departments.includes('ExternalOwner')) {
+        //     return currentRole = 'ExternalOwnerOnly' //External Owner Only -> Disable Submit Button
+        //   }
+        // }
+        // else if(departments.length === 2){
+        //   if (departments.includes('Requestor') && (departments.includes('InternalOwner') || departments.includes('ExternalOwner') || (departments.includes('DirectorsView')))) {
+        //     if (!updateRequestID){
+        //       if(departments.includes('DirectorsView')){
+        //         return currentRole = 'RequestorCreate'; //New Request by Director's View
+        //       }
+        //       else{
+        //         return currentRole = 'OwnerCreate'; //New Request by Internal Owner or External Owner on behalf of requestor or for themselves
+        //       }
+        //     }
+        //     else {
+        //       return currentRole = 'OwnerView'; //Internal Owner or External Owner
+        //     }
+        //   }
+        // }
+        // else if(departments.length === 3){
+        //   if (departments.includes('Requestor') && departments.includes('InternalOwner') && departments.includes('Despatcher')){
+        //     if (!updateRequestID){
+        //       return currentRole = 'DespatcherCreate'; //New Request by despatcher on behalf of requestor
+        //     }
+        //     else{
+        //       return currentRole = 'DespatcherAssign'; //Despatcher edit and assign
+        //     }
+        //   }
+        // }
     }
 
     protected get dataVersion(): Version {

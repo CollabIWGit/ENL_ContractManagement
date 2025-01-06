@@ -59,20 +59,46 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   private _environmentMessage: string = '';
   private graphClient: MSGraphClientV3;
 
-  protected onInit(): Promise<void> {
-    currentUser = this.context.pageContext.user.displayName;
-    return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+  // protected onInit(): Promise<void> {
+  //   currentUser = this.context.pageContext.user.displayName;
+  //   return new Promise<void>(async (resolve: () => void, reject: (error: any) => void): Promise<void> => {
+  //     sp.setup({
+  //       spfxContext: this.context as any
+  //     });
+
+  //     this.context.msGraphClientFactory
+  //       .getClient('3')
+  //       .then((client: MSGraphClientV3): void => {
+  //         this.graphClient = client;
+  //         resolve();
+  //       }, err => reject(err));
+  //   });
+  // }
+
+  protected async onInit(): Promise<void> {
+    try {
+      // Set current user
+      currentUser = this.context.pageContext.user.displayName;
+  
+      // Initialize PnP JS
       sp.setup({
         spfxContext: this.context as any
       });
-
-      this.context.msGraphClientFactory
-        .getClient('3')
-        .then((client: MSGraphClientV3): void => {
-          this.graphClient = client;
-          resolve();
-        }, err => reject(err));
-    });
+      
+  
+      // Load MS Graph Client
+      this.graphClient = await this.context.msGraphClientFactory.getClient('3');
+  
+      // Ensure jQuery is available globally for DataTables
+      (window as any).$ = (window as any).jQuery = $;
+  
+      // Initialize absolute and base URLs if required
+      absoluteUrl = this.context.pageContext.web.absoluteUrl;
+      baseUrl = this.context.pageContext.site.absoluteUrl;
+    } catch (error) {
+      console.error("Initialization failed:", error);
+      throw error;
+    }
   }
 
   //Render everything
@@ -304,9 +330,9 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     this.domElement.innerHTML += `
 
       <div class="main-container" id="content">
-
+  
         <div id="loaderOverlay">
-          <img src="https://enlmu.sharepoint.com/sites/LegalLink/SiteAssets/Images/LoaderSpinner.gif" alt="Loading...">
+          <div id="pageLoader" class="${styles.pageLoader}"></div>
         </div>
 
         <div id="nav-placeholder" class="left-panel"></div>
@@ -335,8 +361,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                         <input type="text" id="requestor_name" required autocomplete="off">
                       </div>
                       <div class="${styles.controls}">
-                        <label for="phone_number">Phone Number*</label>
-                        <input type="number" id="phone_number" min="0" required autocomplete="off">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="number" id="phone_number" min="0" autocomplete="off">
                       </div>
                     </div>
 
@@ -422,10 +448,10 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                         <div style="position: relative;">
                           <label for="other_parties" 
                             title="If there are more than 2 parties to the agreement, add the remaining parties using the +"
-                          >Other Parties</label>
+                          >Other Parties*</label>
                           <input type="text" list='companies_folder' id="other_parties" autocomplete="off">
                           <datalist id="companies_folder"></datalist>
-                          <button class="${styles.addPartiesButton}" id="addOtherParties">+</button>
+                          <button class="${styles.addPartiesButton}" id="addOtherParties">+ Add Party</button>
                         </div>
                       </div>
                     </div>
@@ -435,7 +461,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                         <div style="position: relative;">
                           <label for="contributors_email">Contributors Email (Internal Only)</label>
                           <input type="text" id="contributors_email" autocomplete="off">
-                          <button class="${styles.addPartiesButton}" id="addParty2">+</button>
+                          <button class="${styles.addPartiesButton}" id="addParty2">+ Add Email</button>
                         </div>
                       </div>
                     </div>
@@ -550,6 +576,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       </div>
     `;
 
+    document.getElementById("loaderOverlay").style.display = "flex";
+
     //#region SPComponent Loader
     SPComponentLoader.loadScript('https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js')
       .then(() => {
@@ -579,28 +607,41 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Retrieve Request ID
     const urlParams = new URLSearchParams(window.location.search);
     const updateRequestID = urlParams.get('requestid');
-    const contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Contributors","Party1_agreement","AssignedTo").filter(`ID eq ${updateRequestID}`).get();
-    console.log(contractDetails);
-    // const NameOfAgreement = contractDetails[0].NameOfAgreement;
+    var contractDetails;
+    if(updateRequestID){
+      contractDetails = await sp.web.lists.getByTitle("Contract_Request").items.select("NameOfAgreement","Company","NameOfRequestor","Owner","TypeOfContract","Others_parties","Confidential","ContractStatus","Contributors","Party1_agreement","AssignedTo","Created","NameOfAgreement", "Party2_agreement").filter(`ID eq ${updateRequestID}`).get();
+    }
+    console.log('CD:', contractDetails);
+    let NameOfAgreement = '';
     let contractStatus = '';
     let companyName = '';
     // let NameOfRequestor = '';
     // let NameOfOwner = '';
     let isConfidential = '';
-    let party1_agreement = '';
+    let party2_agreement = '';
     // let party2_type = '';
     let contributorsArrayInitial = [];
     let assignedOwner = '';
+    let companyAccronym = '';
+    let party2Accronym = '';
     // let party2ContributorsArrayInitial = [];
     // const typeOfAgreement = contractDetails[0].TypeOfContract;
     // const otherParties = contractDetails[0].Others_parties;
     let onBehalf: boolean = false;
+
+    const testcompanies = await sp.web.lists.getByTitle('Company').items.getAll();
+    const companyNames = testcompanies.map(company => company.field_1);
+    console.log('companyNames', companyNames);
 
     let currentUserNameFromField = '';
 
     // const party2PersonsInput = document.getElementById("party2_persons") as HTMLInputElement;
     // const addParty2Button = document.getElementById("addParty2") as HTMLButtonElement;
     // const party2TypeInput = document.getElementById("party2") as HTMLInputElement;
+
+    document.getElementById('expectedCommenceDate').addEventListener('keydown', function(event) {
+      event.preventDefault(); // Prevent manual input
+    });
 
     document.getElementById('requestorSubmit').innerHTML += `
       <button type="submit" id="saveToList"><i class="fa fa-refresh icon" style="display: none;"></i>Save</button>
@@ -635,14 +676,17 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     //Update Request
     else {
       assignedOwner = contractDetails[0].AssignedTo;
-      // NameOfAgreement = contractDetails[0].NameOfAgreement;
+      NameOfAgreement = contractDetails[0].NameOfAgreement;
       companyName = contractDetails[0].Company;
       // NameOfRequestor = contractDetails[0].NameOfRequestor;
       // NameOfOwner = contractDetails[0].Owner;
       isConfidential = contractDetails[0].Confidential;
-      // party2_agreement = contractDetails[0].Party2_agreement;
+      party2_agreement = contractDetails[0].Party2_agreement;
       contractStatus = contractDetails[0].ContractStatus;
       // party2_type = contractDetails[0].Party2_Type;
+      companyAccronym = await this.getCompanyAcronymByIdentifier(companyName);
+      party2Accronym = await this.getCompanyAcronymByIdentifier(party2_agreement);
+
       if(contractDetails[0].Contributors){
         contributorsArrayInitial = contractDetails[0].Contributors.split(';').map(email => email.trim());
       }
@@ -670,7 +714,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             });
             console.log("User accepted:", updateRequestID);
             alert("You accepted the request " + updateRequestID);
-            location.reload();
+            // location.reload();
+            Navigation.navigate(`${absoluteUrl}/SitePages/Working-Area.aspx?requestid=${updateRequestID}`, true);
           } 
           else 
           {
@@ -685,7 +730,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             const list = sp.web.lists.getByTitle("Contract_Request");
             await list.items.getById(Number(updateRequestID)).update({
                 AssignedTo: "",
-                ContractStatus: 'ToBeAssigned'
+                ContractStatus: 'ToBeAssigned',
+                Rejected: true
             });
             console.log("User rejected:", updateRequestID);
             alert("You rejected the request " + updateRequestID);
@@ -721,7 +767,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
     const library = sp.web.lists.getByTitle(libraryTitle);
     var folderId = '';
     if(updateRequestID){
-      const consolefolderRetrieval = await library.rootFolder.folders.getByName(companyName).folders.getByName(updateRequestID);
+      const consolefolderRetrieval = await library.rootFolder.folders.getByName(companyAccronym).folders.getByName(updateRequestID);
       const consolefolderItem = await consolefolderRetrieval.listItemAllFields.get();
       folderId = consolefolderItem.Id;
       this.consoleFolderUsers(libraryTitle, folderId);
@@ -777,8 +823,17 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       ManageHierarchy: 1073741928
     };
 
+    let createdDate = '';
+    let agreementCreatedDate = '';
+    let agreementName = '';
+
     //Display Legal Department
     if(currentRole === ('DespatcherAssign') || currentRole === 'OwnerUpdate'){
+
+      createdDate = contractDetails[0].Created;
+      agreementCreatedDate = createdDate.split("T")[0];
+      agreementName = (agreementCreatedDate + '_' + companyAccronym + '_' + updateRequestID + '_ContractType_' + party2Accronym + '_');
+
       $('#legalDeptSection').show();
 
       document.getElementById('legalDeptSection').innerHTML += `
@@ -787,7 +842,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             <div class="${styles['col-1-2']}">
               <div id="assignOwners" class="${styles.controls}">
                 <label for="assignedTo">Assigned To*</label>
-                <input type="text"  placeholder="Please select.." id="assignedTo" list='ownersList' required  autocomplete="off">
+                <span id="assignedTo_error" class="${styles.errorSpan}">Please select a valid user.</span>
+                <input type="text" placeholder="Please select.." id="assignedTo" list='ownersList' required  autocomplete="off">
                 <datalist id="ownersList" style="color: blue"></datalist>
               </div>
               <div class="${styles.controls}">
@@ -796,14 +852,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               </div>
               <div class="${styles.controls}">
                 <label for="contractType">Type of Contract*</label>
+                <span id="contractType_error" class="${styles.errorSpan}">Please select a valid type.</span>
                 <input type="text" id="contractType" placeholder="Please select.." list='contractTypeList' required autocomplete="off">
                 <datalist id="contractTypeList"></datalist>          
               </div>
             </div>
             <div class="${styles.controls}" style="width: 50%;float: left;display: flex;flex-direction: column;justify-content: flex-end;">
+              <label for="agreement_name">Name of Agreement</label>
               <div>
-                <label for="agreement_name">Name of Agreement</label>
-                <input type="text"  id="agreement_name" readonly autocomplete="off">
+                <span id="generatedAgreementName"></span>
+                <input type="text" id="agreement_name" readonly autocomplete="off" required>
               </div>
               <label for="DespatcherComments">Comments from Despatcher</label>
               <textarea style="height: 100%;" type="text" placeholder="Your comment here..." id="DespatcherComments"></textarea>
@@ -818,6 +876,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       `;
 
       this.renderRequestDetails(updateRequestID, otherPartiesTable, party2Table);
+
+      if(!contractDetails[0].NameOfAgreement){
+        document.getElementById('generatedAgreementName').innerText = agreementName;
+        document.getElementById('agreement_name').style.width = '40%';
+        document.getElementById('agreement_name').removeAttribute('readonly');
+      }
 
       if(currentRole === 'OwnerUpdate'){
         const form = document.getElementById('despatcher_form');
@@ -1031,6 +1095,9 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       event.preventDefault(); // Prevent the default form submission
   
       const form = event.target as HTMLFormElement;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const updateRequestID = urlParams.get('requestid');
   
       if (form.checkValidity() === false) {
           event.stopPropagation();
@@ -1041,25 +1108,43 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               firstInvalidElement.focus();
           }
       }
-      else if ($("#requestFor").val() === 'Review of Agreement' && !$("#uploadContract").val()) {
+      else if ($("#requestFor").val() === 'Review of Agreement' && !$("#uploadContract").val() && !updateRequestID) {
         alert("Please upload a file.");
+        return;
+      }
+
+      //Other Parties table data
+      var dataOtherParties = otherPartiesTable.rows().data();
+      var allOtherParties = "";
+      var rowCountOtherParties = dataOtherParties.length;
+      var otherPartiesPermissionsArray = [];
+      var otherPartiesValidationArray = [];
+
+      let companyNameVal = $("#enl_company").val();
+      let party1Agreement = $("#party1").val();
+      otherPartiesPermissionsArray.push(companyNameVal);
+      otherPartiesPermissionsArray.push(party1Agreement);
+
+      dataOtherParties.each(function (value, index) {
+        var partyName = value[0];
+        allOtherParties += partyName;
+        if (index < rowCountOtherParties - 1) {
+            allOtherParties += ";";
+        }
+        otherPartiesPermissionsArray.push(partyName);
+        otherPartiesValidationArray.push(partyName);
+      });
+
+      console.log('aotherparties', otherPartiesPermissionsArray);
+      console.log('vaotherparties', otherPartiesValidationArray);
+
+      if (otherPartiesValidationArray.length === 0){
+        alert("At least 1 Other Party is required.");
+        return;
       }
       else {
         (document.getElementById('saveToList') as HTMLButtonElement).disabled = true;
         document.getElementById("loaderOverlay").style.display = "flex";
-
-        //Other Parties table data
-        var dataOtherParties = otherPartiesTable.rows().data();
-        var allOtherParties = "";
-        var rowCountOtherParties = dataOtherParties.length;
-
-        dataOtherParties.each(function (value, index) {
-          var partyName = value[0];
-          allOtherParties += partyName;
-          if (index < rowCountOtherParties - 1) {
-              allOtherParties += ";";
-          }
-        });
 
         //Party 2 persons table data
         // var dataParty2 = party2Table.rows().data();
@@ -1089,13 +1174,13 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           NameOfRequestor: $("#requestor_name").val(),
           Email: $("#email").val(),
           Phone_Number: $("#phone_number").val(),
-          Company: $("#enl_company").val(),
+          Company: companyNameVal,
           Contributors: party2ContributorsValue,
           RequestFor: $("#requestFor").val(),
           Confidential: confidentialValue,
           BriefDescriptionTransaction: $("#brief_desc").val(),
-          Party1_agreement: $("#party1").val(),
-          // Party2_agreement: $("#party2").val(),
+          Party1_agreement: party1Agreement,
+          Party2_agreement: otherPartiesValidationArray[0],
           // Party2_Type: $("#party2_type").val(),
           Others_parties: allOtherParties,
           // Party2_Persons: party2CntributorsValue,
@@ -1138,10 +1223,11 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             }
 
             const companyFolderName = $("#enl_company").val() as string;
+            const accronymCompanyName = await this.getCompanyAcronymByIdentifier(companyFolderName);
             const contractFolderName = contractDetailsLibraryData.Request_ID;
 
             //Create contract folder
-            const folderCreation = await library.rootFolder.folders.getByName(companyFolderName).folders.add(contractFolderName);
+            const folderCreation = await library.rootFolder.folders.getByName(accronymCompanyName).folders.add(contractFolderName);
             console.log(`Contract Folder '${contractFolderName}' created successfully.`);
             const folderItem = await folderCreation.folder.listItemAllFields.get();
 
@@ -1151,7 +1237,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             // this.consoleFolderUsers(libraryTitle, folderID);
 
             //Final path in which document will be stored
-            const caseFolderPath = `/sites/LegalLink/Contracts/${companyFolderName}/${contractFolderName}`;
+            const caseFolderPath = `/sites/LegalLink/Contracts/${accronymCompanyName}/${contractFolderName}`;
 
             //Assign Permissions
             try {
@@ -1202,6 +1288,26 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                   console.error(`Failed to assign permissions for ${userEmail}:`, error.message);
                 }
               }
+
+              //Assign Directors Permissions
+              for (const company of companyNames) {
+                // Check if the company is in otherPartiesPermissionsArray
+                if (otherPartiesPermissionsArray.includes(company)) {
+                  const accronymCompanyName = await this.getCompanyAcronymByIdentifier(company);
+                  const groupName = `LegalLink_${accronymCompanyName}_Directors_View`;
+                  
+                  const companySharepointGroupID = await this.getSharePointGroupIdByName(groupName);
+                  
+                  if (companySharepointGroupID) {
+                    try {
+                        await this.addRoleAssignment(requestDigest, libraryTitle, folderID, companySharepointGroupID, permissionLevels.Edit);
+                        console.log(`LegalLink_${company}_Directors_View group added with permissions`);
+                    } catch (error) {
+                        console.error(`Error assigning permissions for group ${groupName}:`, error);
+                    }
+                  }
+                }
+              }
             
               // List Folder Permissions after adding new users
               this.consoleFolderUsers(libraryTitle, folderID);
@@ -1209,7 +1315,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
             } catch (error) {
               console.error("Error updating folder permissions:", error);
             }
-            
+
             //If file has been uploaded
             if ($("#requestFor").val() == 'Review of Agreement') {
               try {
@@ -1242,7 +1348,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           const removeContributorArray = contributorsArrayInitial.filter(email => !contributorsArrayCurrent.includes(email));
           const addContributorArray = contributorsArrayCurrent.filter(email => !contributorsArrayInitial.includes(email));
 
-          const folder = await library.rootFolder.folders.getByName(companyName).folders.getByName(updateRequestID).listItemAllFields.select('Id').get();
+          const folder = await library.rootFolder.folders.getByName(companyAccronym).folders.getByName(updateRequestID).listItemAllFields.select('Id').get();
           console.log(folder);
           const folderId = folder.Id;
 
@@ -1271,17 +1377,17 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
               console.log("Item updated successfully");
             }
 
-            const caseFolderPath = `/sites/LegalLink/Contracts/${companyName}/${updateRequestID}`;
+            // const caseFolderPath = `/sites/LegalLink/Contracts/${companyAccronym}/${updateRequestID}`;
 
             //If file has been uploaded
-            if ($("#requestFor").val() == 'Review of Agreement') {
-              try {
-                await this.addFileToContractFolder(caseFolderPath, filename_add, content_add, updateRequestID);
-              }
-              catch (e) {
-                console.log(e.message);
-              }
-            }
+            // if ($("#requestFor").val() == 'Review of Agreement') {
+            //   try {
+            //     await this.addFileToContractFolder(caseFolderPath, filename_add, content_add, updateRequestID);
+            //   }
+            //   catch (e) {
+            //     console.log(e.message);
+            //   }
+            // }
 
             document.getElementById("loaderOverlay").style.display = "none";
             alert(`Request has been updated successfully.`);
@@ -1416,7 +1522,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
       } 
       else {
-        // (document.getElementById('assignOwner') as HTMLButtonElement).disabled = true;
+        document.getElementById("loaderOverlay").style.display = "flex";
+        (document.getElementById('assignOwner') as HTMLButtonElement).disabled = true;
 
         // Retrieve the data-value attribute of the selected option in the datalist
         const shownVal = (document.getElementById("assignedTo") as HTMLInputElement).value;
@@ -1425,9 +1532,15 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         if (selectedOption) {
           OwnerEmail = selectedOption.getAttribute('data-value') || "";
         }
-        const contractTyoe = $("#contractType").val();
-        const currentDate = new Date().toISOString().split('T')[0];
-        const agreementName = (currentDate + '_' + companyName + '_' + updateRequestID + '_' + contractTyoe + '_' + party1_agreement);
+        const accronymCompanyName = await this.getCompanyAcronymByIdentifier(companyName);
+        const accronymAgreementName = await this.getCompanyAcronymByIdentifier(party2_agreement);
+        const contractType = $("#contractType").val().toString();
+        const accronymContractType = await this.getContractTypeAcronymByIdentifier(contractType);
+        const agreementNameDynamic = $("#agreement_name").val();
+        let agreementName = agreementNameDynamic;
+        if(!NameOfAgreement){
+          agreementName = (agreementCreatedDate + '_' + accronymCompanyName + '_' + updateRequestID + '_' + accronymContractType + '_' + accronymAgreementName + '_' + agreementNameDynamic);
+        }
 
         // Form data
         const assignData = {
@@ -1435,7 +1548,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
           AssignedTo: $("#assignedTo").val(),
           OwnerEmail: OwnerEmail,
           DueDate: $("#due_date").val(),
-          TypeOfContract: contractTyoe,
+          TypeOfContract: contractType,
           DespatcherComments: $("#DespatcherComments").val(),
           NameOfAgreement: agreementName,
           ContractStatus: 'ToBeAccepted'
@@ -1444,7 +1557,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         console.log(assignData);
       
         try {
-          const folderRetrieval = await library.rootFolder.folders.getByName(companyName).folders.getByName(updateRequestID);
+          const folderRetrieval = await library.rootFolder.folders.getByName(accronymCompanyName).folders.getByName(updateRequestID);
           const folderItem = await folderRetrieval.listItemAllFields.get();
           // console.log('folderItem.Id;', folderItem.Id);
           const folderID = folderItem.Id;
@@ -1491,6 +1604,9 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         } catch (error) {
           console.error("Error updating item:", error);
         }
+
+        document.getElementById("loaderOverlay").style.display = "none";
+        (document.getElementById('assignOwner') as HTMLButtonElement).disabled = false;
       }
     });
 
@@ -1570,6 +1686,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         });
       });
     });
+
+    document.getElementById("loaderOverlay").style.display = "none";
   }
 
   //RequestDigest
@@ -1614,6 +1732,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
         }
     });
   }
+
+  private async getSharePointGroupIdByName(SPGroupName) {
+    try {
+      const group = await sp.web.siteGroups.getByName(SPGroupName).get();
+      return group.Id;
+    } catch (error) {
+        console.warn(`Group not found for name: ${SPGroupName}`);
+        return null; // Return null if the group does not exist
+    }
+}
 
   //Adding Role Assignment for User
   // private async addRoleAssignmentUser(requestDigest, folderUrl, principalId, roleDefId) {
@@ -1863,14 +1991,16 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       console.error("Dropdown element not found");
       return;
     }
-    const companies = await sp.web.lists.getByTitle('Companies').items.getAll();
-    console.log(companies);
+    // Fetch companies and sort alphabetically by field_1
+    const companies = await sp.web.lists.getByTitle('Company').items.getAll();
+    const sortedCompanies = companies.sort((a, b) => a.field_1.localeCompare(b.field_1));
 
-    await Promise.all(companies.map(async (result) => {
+    // Map sorted companies to dropdown options
+    sortedCompanies.forEach(result => {
       const opt = document.createElement('option');
-      opt.value = result.Title;
+      opt.value = result.field_1; // Set the option's value to field_1
       drp_companies.appendChild(opt);
-    }));
+    });
   }
 
   public async load_contractType() {
@@ -1895,12 +2025,24 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       console.error("Dropdown element not found");
       return;
     }
-    const companies = await sp.web.lists.getByTitle('ENL_Services').items.get();
+    const companies = await sp.web.lists.getByTitle('ENR_Services').items.get();
     await Promise.all(companies.map(async (result) => {
       const opt = document.createElement('option');
       opt.value = result.Title;
       drp_companies.appendChild(opt);
     }));
+  }
+
+  public async getCompanyAcronymByIdentifier(identifier: string): Promise<string | null> {
+    const companies = await sp.web.lists.getByTitle('Company').items.getAll();
+    const company = companies.find(item => item.field_1 === identifier);
+    return company ? company.Title : identifier;
+  }
+
+  public async getContractTypeAcronymByIdentifier(contractType: string): Promise<string | null> {
+    const TOCs = await sp.web.lists.getByTitle('Type of contracts').items.getAll();
+    const toc = TOCs.find(item => item.Identifier === contractType);
+    return toc ? toc.Title : null;
   }
 
   // Function to set requestor details
@@ -2094,6 +2236,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
   
   //Render Update Request Details
   private renderRequestDetails(id: any, otherPartiesTable, party2Table) {
+    // document.getElementById("loaderOverlay").style.display = "flex";
     var checkbox = document.getElementById('checkbox_confidential') as HTMLInputElement;
     try {
       let currentWebUrl = this.context.pageContext.web.absoluteUrl;
@@ -2250,9 +2393,12 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       var othersPartiesVal = item.Others_parties;
                       othersPartiesVal = othersPartiesVal.replace(/;+$/, '');
                       var otherPartiesArray = othersPartiesVal.split(';');
-                      var tbodyOtherParties = document.getElementById('tb_otherParties');
-                      tbodyOtherParties.innerHTML = '';
-                  
+                      // var tbodyOtherParties = document.getElementById('tb_otherParties');
+                      // tbodyOtherParties.innerHTML = '';
+                      otherPartiesTable.clear().draw();
+                      
+                      console.log('Other parties render:', otherPartiesArray);
+
                       otherPartiesArray.forEach(function (value) {
                         otherPartiesTable.row.add([
                           value,
@@ -2265,8 +2411,9 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                       var contributors_emailVal = item.Contributors;
                       contributors_emailVal = contributors_emailVal.replace(/;+$/, '');
                       var party2Array = contributors_emailVal.split(';');
-                      var tbodyParty2 = document.getElementById('tb_party2');
-                      tbodyParty2.innerHTML = '';
+                      // var tbodyParty2 = document.getElementById('tb_party2');
+                      // tbodyParty2.innerHTML = '';
+                      party2Table.clear().draw();
 
                       party2Array.forEach(function (value) {
                         party2Table.row.add([
@@ -2285,10 +2432,7 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
                         $("#approve_no").prop("checked", true);
                     }
 
-                    if(item.AuthorityApproveContract === 'Yes'){
-                      $("#authorisedApproverDiv").show();
-                      $("#authorisedApprover").val(item.AuthorisedApprover);
-                    }
+                    $("#authorisedApprover").val(item.AuthorisedApprover);
 
                     $("#assignedTo").val(item.AssignedTo);
                     $("#contractType").val(item.TypeOfContract);
@@ -2326,6 +2470,8 @@ export default class RequestFormWebPart extends BaseClientSideWebPart<IRequestFo
       console.log(err.message);
     }
 
+    // document.getElementById("loaderOverlay").style.display = "none";
+    
   }
 
   async getFileDetailsByFilter(libraryName, reqId) {

@@ -8324,7 +8324,7 @@ h1, h2, h3, h4, h5,
       #sidebar ul li > ul li {
         font-size: 14px; }
     #sidebar ul li a {
-      padding: 6% 6%;
+      padding: 4% 6%;
       font-size: small;
       display: block;
       color: rgba(255, 255, 255, 0.6);
@@ -8342,7 +8342,7 @@ h1, h2, h3, h4, h5,
     }
     /*Sidebar dashboard items*/
     #sidebar ul li .sidebar-item {
-      padding: 6% 6%;
+      padding: 4% 6%;
       font-size: small;
       display: block;
       color: rgba(255, 255, 255, 0.6);
